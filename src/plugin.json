@@ -1,0 +1,33 @@
+{
+  "$schema": "https://raw.githubusercontent.com/grafana/grafana/main/docs/sources/developers/plugins/plugin.schema.json",
+  "type": "datasource",
+  "name": "Intelligence Gateway Secure AI",
+  "id": "digitalrcs-intelligencegateway-datasource",
+  "metrics": true,
+  "backend": true,
+  "executable": "gpx_intelligencegateway",
+  "info": {
+    "description": "Secure server-side AI provider gateway for the DigitalRCS Grafana Intelligence Gateway panel.",
+    "author": {
+      "name": "DigitalRCS",
+      "url": "https://www.digitalrcs.com"
+    },
+    "keywords": ["ai", "llm", "openai", "lmstudio", "secure", "datasource"],
+    "logos": {
+      "small": "img/logo.svg",
+      "large": "img/logo.svg"
+    },
+    "links": [
+      { "name": "DigitalRCS", "url": "https://www.digitalrcs.com" },
+      { "name": "Source", "url": "https://github.com/DigitalRCS/grafana-intelligence-gateway-datasource" },
+      { "name": "Issues", "url": "https://github.com/DigitalRCS/grafana-intelligence-gateway-datasource/issues" }
+    ],
+    "screenshots": [],
+    "version": "%VERSION%",
+    "updated": "%TODAY%"
+  },
+  "dependencies": {
+    "grafanaDependency": ">=11.6.0",
+    "plugins": []
+  }
+}
