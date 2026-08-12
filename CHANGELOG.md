@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.1 - 2026-08-12
+
+- Filtered secure model discovery to administrator-approved model IDs.
+- Changed an empty model allow-list to permit only the configured default model.
+- Removed the unused OAuth client-secret field so only implemented credential types are stored.
+- Removed the incomplete streaming option; the production transport is explicitly buffered and bounded.
+
 ## 1.0.0 - 2026-08-12
 
 - Initial secure backend data-source implementation.

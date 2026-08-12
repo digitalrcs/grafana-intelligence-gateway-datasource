@@ -16,7 +16,7 @@
 - OpenAI host restriction, redirect rejection, and prohibited-address checks.
 - 1 MiB request and 16 MiB buffered response ceilings.
 - Four concurrent calls and 30 calls per minute per data-source instance.
-- Model allow-list, administrator token ceiling, supported roles, and temperature validation.
+- Default-only behavior when the model allow-list is empty, approved-only model discovery, administrator token ceiling, supported roles, and temperature validation.
 - No prompt, answer, credential, or upstream error-body logging by default.
 
 Use Grafana data-source permissions to restrict edit and query access. Keep provider budgets and organization billing limits enabled, and use egress/firewall policy as a second SSRF boundary.

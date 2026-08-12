@@ -9,6 +9,7 @@ This repository is prepared for Grafana's automated validation and manual plugin
 - Complete `plugin.json` metadata, logos, catalog screenshots, minimum Grafana version, source, issues, and project links.
 - Credentials stored only in `secureJsonData`; no analytics or tracking code.
 - Server-side URL, model, token, timeout, body-size, redirect, concurrency, rate, and error-redaction policies.
+- Model discovery exposes only administrator-approved IDs; an empty allow-list permits only the configured default model.
 - Typecheck, lint, frontend build, Go tests/build, and multi-version Grafana E2E in GitHub Actions.
 - Provisioned Docker review environment with a deterministic mock provider and sample dashboard.
 - Official Grafana release workflow with provenance attestation. Initial review archives remain unsigned until Grafana grants a public signature level.

@@ -61,3 +61,20 @@ func TestModelAllowList(t *testing.T) {
 		t.Fatal("allow-list was not enforced")
 	}
 }
+
+func TestEmptyAllowListPermitsOnlyDefaultModel(t *testing.T) {
+	settings := PluginSettings{DefaultModel: "default-model"}
+	if !settings.ModelAllowed("default-model") || settings.ModelAllowed("other-model") {
+		t.Fatal("empty allow-list must permit only the administrator default")
+	}
+}
+
+func TestDefaultModelMustBeAllowed(t *testing.T) {
+	settings := PluginSettings{
+		Provider: "openai", BaseURL: "https://api.openai.com/v1", DefaultModel: "default-model",
+		TimeoutSeconds: 30, MaxOutputTokens: 100, AllowedModels: []string{"other-model"},
+	}
+	if err := settings.Validate(); err == nil {
+		t.Fatal("expected default model outside the allow-list to be rejected")
+	}
+}

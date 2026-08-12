@@ -110,7 +110,7 @@ export function ConfigEditor({ options, onOptionsChange }: Props) {
         <InlineField
           label="Allowed models"
           labelWidth={24}
-          tooltip="One model ID per line. Leave empty to permit any model accepted by the configured provider."
+          tooltip="One model ID per line. The default model must be included. When empty, only the default model is permitted."
         >
           <TextArea
             id="config-allowed-models"
@@ -154,13 +154,6 @@ export function ConfigEditor({ options, onOptionsChange }: Props) {
             }
           />
         </InlineField>
-        <InlineField label="Permit streaming" labelWidth={24}>
-          <Switch
-            id="config-allow-streaming"
-            value={jsonData.allowStreaming}
-            onChange={(event) => updateJson('allowStreaming', event.currentTarget.checked)}
-          />
-        </InlineField>
       </FieldSet>
 
       <FieldSet label="Credentials">
@@ -179,14 +172,6 @@ export function ConfigEditor({ options, onOptionsChange }: Props) {
           value={options.secureJsonData?.bearerToken}
           onChange={(value) => updateSecret('bearerToken', value)}
           onReset={() => resetSecret('bearerToken')}
-        />
-        <SecretField
-          id="config-client-secret"
-          label="OAuth client secret"
-          configured={Boolean(options.secureJsonFields.clientSecret)}
-          value={options.secureJsonData?.clientSecret}
-          onChange={(value) => updateSecret('clientSecret', value)}
-          onReset={() => resetSecret('clientSecret')}
         />
       </FieldSet>
     </Stack>

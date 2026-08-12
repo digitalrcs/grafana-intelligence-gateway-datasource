@@ -96,6 +96,23 @@ func TestProviderErrorsAreRedacted(t *testing.T) {
 	}
 }
 
+func TestFilterModelListReturnsOnlyAdministratorApprovedModels(t *testing.T) {
+	settings := &models.PluginSettings{
+		DefaultModel:  "default-model",
+		AllowedModels: []string{"default-model", "allowed-model"},
+	}
+	filtered, err := filterModelList(
+		[]byte(`{"data":[{"id":"blocked-model"},{"id":"allowed-model"},{"id":"allowed-model"}]}`),
+		settings,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(filtered), "blocked-model") || strings.Count(string(filtered), "allowed-model") != 1 {
+		t.Fatalf("unexpected filtered model list: %s", filtered)
+	}
+}
+
 func TestLMStudioAllowsPrivateHTTPAddress(t *testing.T) {
 	target, err := url.Parse("http://192.168.1.25:1234/v1")
 	if err != nil {

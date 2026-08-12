@@ -21,7 +21,6 @@ export interface IntelligenceGatewayDataSourceOptions extends DataSourceJsonData
   timeoutSeconds?: number;
   allowedModels?: string[];
   maxOutputTokens?: number;
-  allowStreaming?: boolean;
   allowInsecureHttp?: boolean;
 }
 
@@ -29,7 +28,6 @@ export interface IntelligenceGatewayDataSourceOptions extends DataSourceJsonData
 export interface IntelligenceGatewaySecureJsonData {
   apiKey?: string;
   bearerToken?: string;
-  clientSecret?: string;
 }
 
 export const DEFAULT_CONFIG: Required<Omit<IntelligenceGatewayDataSourceOptions, keyof DataSourceJsonData>> = {
@@ -39,6 +37,5 @@ export const DEFAULT_CONFIG: Required<Omit<IntelligenceGatewayDataSourceOptions,
   timeoutSeconds: 300,
   allowedModels: ['gpt-4.1-mini'],
   maxOutputTokens: 256000,
-  allowStreaming: false,
   allowInsecureHttp: false,
 };
