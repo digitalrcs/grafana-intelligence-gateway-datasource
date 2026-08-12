@@ -6,6 +6,7 @@
   "metrics": true,
   "backend": true,
   "executable": "gpx_intelligencegateway",
+  "category": "other",
   "info": {
     "description": "Secure server-side AI provider gateway for the DigitalRCS Grafana Intelligence Gateway panel.",
     "author": {
@@ -22,7 +23,20 @@
       { "name": "Source", "url": "https://github.com/DigitalRCS/grafana-intelligence-gateway-datasource" },
       { "name": "Issues", "url": "https://github.com/DigitalRCS/grafana-intelligence-gateway-datasource/issues" }
     ],
-    "screenshots": [],
+    "screenshots": [
+      {
+        "name": "Secure provider policy",
+        "path": "img/secure-provider-settings.png"
+      },
+      {
+        "name": "Explicit insecure HTTP override",
+        "path": "img/insecure-http-override.png"
+      },
+      {
+        "name": "Companion panel integration",
+        "path": "img/panel-secure-datasource.png"
+      }
+    ],
     "version": "%VERSION%",
     "updated": "%TODAY%"
   },

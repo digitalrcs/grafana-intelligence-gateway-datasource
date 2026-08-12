@@ -7,6 +7,10 @@ backend decrypts and adds them to provider requests. Dashboards and browser code
 Plugin ID: `digitalrcs-intelligencegateway-datasource`  
 Grafana: `>=11.6.0`
 
+![Secure provider settings](src/img/secure-provider-settings.png)
+
+The [GitHub Wiki](https://github.com/digitalrcs/grafana-intelligence-gateway-datasource/wiki) contains the complete installation, configuration, security, panel-integration, review, and troubleshooting guides.
+
 ## Configuration contract
 
 Non-secret `jsonData`:
@@ -98,12 +102,16 @@ docker compose up
 Use `npm run package:plugin` instead of Windows `Compress-Archive`: it preserves the Linux backend binary's required
 `0755` executable mode and the explicit top-level plugin directory in the ZIP.
 
-Open <http://localhost:3000>, configure the provisioned data source, then use **Save & test**. The health check calls the
-provider's `/models` route so it verifies network access and credentials without sending a prompt.
+Open <http://localhost:3000> and sign in with `admin` / `admin`. The development stack provisions a deterministic mock
+provider, the data source, and a review dashboard; it requires no external credential. Use **Save & test**, then open
+**Dashboards > Intelligence Gateway Data Source Review** and run the sample query. The health check calls the provider's
+`/models` route so it verifies network access without sending a prompt.
 
 Restart Grafana after changing `src/plugin.json`. The generated GitHub Actions workflows build the frontend and backend,
 run tests, package a ZIP with the required top-level plugin directory, and sign when
 `GRAFANA_ACCESS_POLICY_TOKEN` is configured.
+
+If port 3000 is already in use, set `GRAFANA_PORT` before starting Compose (for example, `GRAFANA_PORT=3002`).
 
 ## Panel integration
 
@@ -111,6 +119,8 @@ In the companion panel, select this instance under **AI provider > Secure AI dat
 data-source UID plus non-secret model, temperature, and output choices. **Load models securely** uses the `/models`
 resource, and **Analyze** posts the constructed prompt to `/chat/completions`. Secure mode is buffered in the current
 panel release. Existing direct provider fields remain only for local development and dashboard migration.
+
+![The companion panel using the secure data source](src/img/panel-secure-datasource.png)
 
 ## Integrated Docker test
 

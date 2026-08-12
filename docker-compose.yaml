@@ -3,3 +3,18 @@ services:
     extends:
       file: .config/docker-compose-base.yaml
       service: grafana
+    ports: !override
+      - '${GRAFANA_PORT:-3000}:3000'
+    depends_on:
+      mock-ai:
+        condition: service_healthy
+
+  mock-ai:
+    build:
+      context: ./testdata/mock-provider
+    container_name: digitalrcs-intelligencegateway-mock-ai
+    healthcheck:
+      test: ['CMD', 'python', '-c', "import urllib.request; urllib.request.urlopen('http://localhost:8080/v1/models')"]
+      interval: 2s
+      timeout: 2s
+      retries: 15

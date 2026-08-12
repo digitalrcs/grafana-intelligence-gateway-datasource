@@ -1,0 +1,48 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "digitalrcs-intelligencegateway-datasource",
+        "uid": "intelligence-gateway-review"
+      },
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 0 },
+      "id": 1,
+      "options": {
+        "cellHeight": "sm",
+        "footer": { "countRows": false, "fields": "", "reducer": ["sum"], "show": false }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "digitalrcs-intelligencegateway-datasource",
+            "uid": "intelligence-gateway-review"
+          },
+          "refId": "A",
+          "systemPrompt": "You are validating a Grafana data-source plugin.",
+          "userPrompt": "Return the deterministic review response.",
+          "model": "review-model",
+          "temperature": 0.2,
+          "maxOutputTokens": 100
+        }
+      ],
+      "title": "Secure backend review query",
+      "type": "table"
+    }
+  ],
+  "refresh": false,
+  "schemaVersion": 42,
+  "tags": ["digitalrcs", "plugin-review"],
+  "templating": { "list": [] },
+  "time": { "from": "now-6h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Intelligence Gateway Data Source Review",
+  "uid": "intelligence-gateway-datasource-review",
+  "version": 1
+}

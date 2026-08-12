@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: Intelligence Gateway review
+    orgId: 1
+    folder: DigitalRCS
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /etc/grafana/provisioning/dashboards
