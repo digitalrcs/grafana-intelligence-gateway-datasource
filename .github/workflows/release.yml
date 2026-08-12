@@ -23,6 +23,8 @@ jobs:
 
       - uses: grafana/plugin-actions/build-plugin@build-plugin/v1.2.0
         with:
+          node-version: '22'
+          go-version: '1.26.5'
           # An empty token produces the unsigned archive accepted for first review.
           # Enable public signing only after Grafana grants a signature level.
           policy_token: ${{ vars.GRAFANA_PUBLIC_SIGNING_ENABLED == 'true' && secrets.GRAFANA_ACCESS_POLICY_TOKEN || '' }}
