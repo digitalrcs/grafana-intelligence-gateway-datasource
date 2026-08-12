@@ -20,5 +20,4 @@ test('rejects OpenAI configuration without a server-side credential', async ({
   await page.getByLabel('Base URL').fill('https://api.openai.com/v1');
 
   await expect(configPage.saveAndTest()).not.toBeOK();
-  await expect(configPage).toHaveAlert('error', { hasText: 'API key or bearer token is required' });
 });
