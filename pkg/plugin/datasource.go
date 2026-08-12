@@ -75,7 +75,7 @@ func (d *Datasource) query(ctx context.Context, query backend.DataQuery) backend
 	if err != nil {
 		return backend.ErrDataResponse(backend.StatusUnknown, err.Error())
 	}
-	defer providerResponse.Body.Close()
+	defer closeBody(providerResponse.Body)
 	body, err := readBounded(providerResponse.Body)
 	if err != nil {
 		return backend.ErrDataResponse(backend.StatusUnknown, err.Error())
@@ -126,7 +126,7 @@ func (d *Datasource) CheckHealth(ctx context.Context, _ *backend.CheckHealthRequ
 	if err != nil {
 		return &backend.CheckHealthResult{Status: backend.HealthStatusError, Message: err.Error()}, nil
 	}
-	response.Body.Close()
+	closeBody(response.Body)
 	return &backend.CheckHealthResult{Status: backend.HealthStatusOk, Message: "Provider connection and credentials are valid"}, nil
 }
 
@@ -136,12 +136,12 @@ func (d *Datasource) handleModels(w http.ResponseWriter, req *http.Request) {
 		writeError(w, err)
 		return
 	}
-	defer response.Body.Close()
+	defer closeBody(response.Body)
 	copyResponse(w, response)
 }
 
 func (d *Datasource) handleChat(w http.ResponseWriter, req *http.Request) {
-	defer req.Body.Close()
+	defer closeBody(req.Body)
 	req.Body = http.MaxBytesReader(w, req.Body, maxRequestBytes)
 	decoder := json.NewDecoder(req.Body)
 	decoder.DisallowUnknownFields()
@@ -159,7 +159,7 @@ func (d *Datasource) handleChat(w http.ResponseWriter, req *http.Request) {
 		writeError(w, err)
 		return
 	}
-	defer response.Body.Close()
+	defer closeBody(response.Body)
 	copyResponse(w, response)
 }
 
@@ -185,6 +185,8 @@ func copyResponse(w http.ResponseWriter, response *http.Response) {
 }
 
 func writeError(w http.ResponseWriter, err error) { writeJSONError(w, statusFor(err), err.Error()) }
+
+func closeBody(body io.Closer) { _ = body.Close() }
 
 func writeJSONError(w http.ResponseWriter, status int, message string) {
 	w.Header().Set("Content-Type", "application/json")

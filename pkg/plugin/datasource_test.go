@@ -73,7 +73,7 @@ func TestGatewayEnforcesTokenCeilingAndModel(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	response.Body.Close()
+	closeBody(response.Body)
 	if received.MaxTokens != 100 {
 		t.Fatalf("expected administrator ceiling 100, got %d", received.MaxTokens)
 	}

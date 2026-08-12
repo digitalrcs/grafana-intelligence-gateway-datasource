@@ -116,7 +116,7 @@ func validateHost(ctx context.Context, target *url.URL, provider string, resolve
 		return errors.New("baseUrl host is required")
 	}
 	localName := host == "localhost" || host == "host.docker.internal"
-	if target.Scheme == "http" && !(provider == "lmstudio" && localName) {
+	if target.Scheme == "http" && (provider != "lmstudio" || !localName) {
 		if ip := net.ParseIP(host); ip == nil || !ip.IsLoopback() || provider != "lmstudio" {
 			return errors.New("HTTP is permitted only for LM Studio on localhost, host.docker.internal, or a loopback IP")
 		}
@@ -246,11 +246,12 @@ func (g *gateway) requestChat(ctx context.Context, request gatewayRequest) (*htt
 		return nil, &gatewayError{status: http.StatusBadGateway, message: "provider request failed"}
 	}
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
-		response.Body.Close()
+		closeBody(response.Body)
 		message := fmt.Sprintf("provider returned HTTP %d", response.StatusCode)
-		if response.StatusCode == http.StatusUnauthorized || response.StatusCode == http.StatusForbidden {
+		switch response.StatusCode {
+		case http.StatusUnauthorized, http.StatusForbidden:
 			message = "provider authentication failed"
-		} else if response.StatusCode == http.StatusTooManyRequests {
+		case http.StatusTooManyRequests:
 			message = "provider rate limit reached"
 		}
 		return nil, &gatewayError{status: response.StatusCode, message: message}
@@ -278,7 +279,7 @@ func (g *gateway) requestModels(ctx context.Context) (*http.Response, error) {
 		return nil, &gatewayError{status: http.StatusBadGateway, message: "provider connection failed"}
 	}
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
-		response.Body.Close()
+		closeBody(response.Body)
 		return nil, &gatewayError{status: response.StatusCode, message: fmt.Sprintf("provider returned HTTP %d", response.StatusCode)}
 	}
 	return response, nil
