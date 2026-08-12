@@ -89,7 +89,7 @@ func (s PluginSettings) Validate() error {
 	if err != nil || parsed.Host == "" || parsed.User != nil || parsed.RawQuery != "" || parsed.Fragment != "" {
 		return fmt.Errorf("baseUrl must be an absolute URL without credentials, query, or fragment")
 	}
-	if parsed.Scheme != "https" && !(parsed.Scheme == "http" && s.AllowInsecureHTTP) {
+	if parsed.Scheme != "https" && (parsed.Scheme != "http" || !s.AllowInsecureHTTP) {
 		return fmt.Errorf("baseUrl must use HTTPS unless allowInsecureHttp is enabled")
 	}
 	if s.DefaultModel == "" {
