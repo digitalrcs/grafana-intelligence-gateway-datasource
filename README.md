@@ -19,7 +19,8 @@ Non-secret `jsonData`:
   "timeoutSeconds": 300,
   "allowedModels": ["gpt-4.1-mini", "gpt-4.1"],
   "maxOutputTokens": 256000,
-  "allowStreaming": false
+  "allowStreaming": false,
+  "allowInsecureHttp": false
 }
 ```
 
@@ -62,10 +63,10 @@ request and returns a one-row `answer` frame, while the companion panel should u
 
 - Provider URLs are administrator-controlled and resource paths are fixed; dashboard requests cannot choose a host or
   arbitrary upstream path.
-- OpenAI is restricted to `api.openai.com`. Custom remote providers require HTTPS; this permits an administrator to
-  explicitly select a public or private compatible service. LM Studio may use HTTP for `localhost`,
-  `host.docker.internal`, loopback IPs, and private LAN addresses. A hostname used with LM Studio HTTP must resolve only
-  to loopback or private addresses; public HTTP destinations remain blocked.
+- HTTPS is required by default. An administrator may explicitly enable **Allow insecure HTTP** (`allowInsecureHttp`) for
+  organizational networks whose hostnames or addresses cannot be classified reliably. This override permits HTTP
+  without hostname locality checks and can expose credentials and prompts in transit; use network controls accordingly.
+- OpenAI remains restricted to `api.openai.com` even when the HTTP override is enabled.
 - Redirects are rejected. Link-local, multicast, and unspecified destinations are rejected.
 - Request bodies are capped at 1 MiB and provider responses at 16 MiB.
 - Each data-source instance permits four concurrent calls and 30 calls per minute. Provider/model-specific budget and

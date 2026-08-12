@@ -101,18 +101,28 @@ func TestLMStudioAllowsPrivateHTTPAddress(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := validateHost(context.Background(), target, "lmstudio", net.DefaultResolver); err != nil {
+	if err := validateHost(context.Background(), target, "lmstudio", true, net.DefaultResolver); err != nil {
 		t.Fatalf("expected private LM Studio address to be allowed: %v", err)
 	}
 }
 
-func TestLMStudioRejectsPublicHTTPAddress(t *testing.T) {
+func TestHTTPOverrideAllowsAddressWithoutLocalClassification(t *testing.T) {
 	target, err := url.Parse("http://8.8.8.8:1234/v1")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := validateHost(context.Background(), target, "lmstudio", net.DefaultResolver); err == nil {
-		t.Fatal("expected public HTTP address to be rejected")
+	if err := validateHost(context.Background(), target, "custom", true, net.DefaultResolver); err != nil {
+		t.Fatalf("expected explicit HTTP override to bypass address classification: %v", err)
+	}
+}
+
+func TestHTTPRequiresExplicitOverride(t *testing.T) {
+	target, err := url.Parse("http://192.168.1.25:1234/v1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := validateHost(context.Background(), target, "lmstudio", false, net.DefaultResolver); err == nil {
+		t.Fatal("expected HTTP without the override to be rejected")
 	}
 }
 

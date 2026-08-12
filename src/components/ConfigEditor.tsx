@@ -72,7 +72,7 @@ export function ConfigEditor({ options, onOptionsChange }: Props) {
           label="Base URL"
           labelWidth={24}
           required
-          tooltip="Administrator-controlled URL. HTTPS is required except for approved LM Studio loopback hosts."
+          tooltip="Administrator-controlled URL. HTTPS is required unless Allow insecure HTTP is explicitly enabled."
         >
           <Input
             id="config-base-url"
@@ -82,6 +82,23 @@ export function ConfigEditor({ options, onOptionsChange }: Props) {
             onChange={(event: ChangeEvent<HTMLInputElement>) => updateJson('baseUrl', event.target.value)}
           />
         </InlineField>
+        <InlineField
+          label="Allow insecure HTTP"
+          labelWidth={24}
+          tooltip="Disables the HTTPS requirement for this data source. Credentials and prompts can be intercepted in transit."
+        >
+          <Switch
+            id="config-allow-insecure-http"
+            value={jsonData.allowInsecureHttp}
+            onChange={(event) => updateJson('allowInsecureHttp', event.currentTarget.checked)}
+          />
+        </InlineField>
+        {jsonData.allowInsecureHttp ? (
+          <Alert title="Insecure HTTP override enabled" severity="warning">
+            Provider credentials and prompts may cross the network without transport encryption. Enable this only on a
+            network you trust.
+          </Alert>
+        ) : null}
         <InlineField label="Default model" labelWidth={24} required>
           <Input
             id="config-default-model"

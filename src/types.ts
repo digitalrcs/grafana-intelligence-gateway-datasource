@@ -22,6 +22,7 @@ export interface IntelligenceGatewayDataSourceOptions extends DataSourceJsonData
   allowedModels?: string[];
   maxOutputTokens?: number;
   allowStreaming?: boolean;
+  allowInsecureHttp?: boolean;
 }
 
 /** Values are written on save and never returned to browser code. */
@@ -39,4 +40,5 @@ export const DEFAULT_CONFIG: Required<Omit<IntelligenceGatewayDataSourceOptions,
   allowedModels: ['gpt-4.1-mini'],
   maxOutputTokens: 256000,
   allowStreaming: false,
+  allowInsecureHttp: false,
 };

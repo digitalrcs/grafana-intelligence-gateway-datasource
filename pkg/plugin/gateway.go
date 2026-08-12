@@ -83,7 +83,7 @@ func newGateway(ctx context.Context, settings *models.PluginSettings) (*gateway,
 	if err != nil {
 		return nil, fmt.Errorf("parse base URL: %w", err)
 	}
-	if err := validateHost(ctx, baseURL, settings.Provider, net.DefaultResolver); err != nil {
+	if err := validateHost(ctx, baseURL, settings.Provider, settings.AllowInsecureHTTP, net.DefaultResolver); err != nil {
 		return nil, err
 	}
 	client := &http.Client{
@@ -110,14 +110,14 @@ func newGateway(ctx context.Context, settings *models.PluginSettings) (*gateway,
 	}, nil
 }
 
-func validateHost(ctx context.Context, target *url.URL, provider string, resolver *net.Resolver) error {
+func validateHost(ctx context.Context, target *url.URL, provider string, allowInsecureHTTP bool, resolver *net.Resolver) error {
 	host := strings.ToLower(target.Hostname())
 	if host == "" {
 		return errors.New("baseUrl host is required")
 	}
 	localName := host == "localhost" || host == "host.docker.internal"
-	if target.Scheme == "http" && provider != "lmstudio" {
-		return errors.New("HTTP is permitted only for LM Studio on localhost, host.docker.internal, or a private network address")
+	if target.Scheme == "http" && !allowInsecureHTTP {
+		return errors.New("HTTP requires the Allow insecure HTTP data-source setting")
 	}
 	if provider == "openai" && host != "api.openai.com" {
 		return errors.New("OpenAI provider baseUrl must use api.openai.com; use custom for other compatible hosts")
@@ -136,9 +136,6 @@ func validateHost(ctx context.Context, target *url.URL, provider string, resolve
 		ip := address.IP
 		if ip.IsUnspecified() || ip.IsMulticast() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() {
 			return errors.New("provider host resolves to a prohibited network address")
-		}
-		if target.Scheme == "http" && provider == "lmstudio" && !ip.IsLoopback() && !ip.IsPrivate() {
-			return errors.New("LM Studio HTTP endpoints must resolve only to loopback or private network addresses")
 		}
 		if provider == "openai" && (ip.IsLoopback() || ip.IsPrivate()) {
 			return errors.New("remote provider host must not resolve to a loopback or private address")

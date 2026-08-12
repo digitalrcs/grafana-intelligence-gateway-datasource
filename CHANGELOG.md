@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Added an administrator-controlled `allowInsecureHttp` override for organizational provider networks that cannot be classified by hostname or IP range.
+
 ## 1.0.0 - 2026-08-11
 
 - Initial secure backend data-source implementation.

@@ -43,6 +43,18 @@ func TestSettingsRejectInsecureRemoteURL(t *testing.T) {
 	}
 }
 
+func TestSettingsAllowExplicitInsecureHTTPOverride(t *testing.T) {
+	settings, err := LoadPluginSettings(settingsSource(t, PluginSettings{
+		Provider: "custom", BaseURL: "http://models.example.internal/v1", DefaultModel: "model", AllowInsecureHTTP: true,
+	}))
+	if err != nil {
+		t.Fatalf("expected HTTP override to be accepted: %v", err)
+	}
+	if !settings.AllowInsecureHTTP {
+		t.Fatal("expected HTTP override to remain enabled")
+	}
+}
+
 func TestModelAllowList(t *testing.T) {
 	settings := PluginSettings{AllowedModels: []string{"allowed"}}
 	if !settings.ModelAllowed("allowed") || settings.ModelAllowed("blocked") {

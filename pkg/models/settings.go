@@ -17,14 +17,15 @@ const (
 )
 
 type PluginSettings struct {
-	Provider        string                `json:"provider"`
-	BaseURL         string                `json:"baseUrl"`
-	DefaultModel    string                `json:"defaultModel"`
-	TimeoutSeconds  int                   `json:"timeoutSeconds"`
-	AllowedModels   []string              `json:"allowedModels"`
-	MaxOutputTokens int                   `json:"maxOutputTokens"`
-	AllowStreaming  bool                  `json:"allowStreaming"`
-	Secrets         *SecretPluginSettings `json:"-"`
+	Provider          string                `json:"provider"`
+	BaseURL           string                `json:"baseUrl"`
+	DefaultModel      string                `json:"defaultModel"`
+	TimeoutSeconds    int                   `json:"timeoutSeconds"`
+	AllowedModels     []string              `json:"allowedModels"`
+	MaxOutputTokens   int                   `json:"maxOutputTokens"`
+	AllowStreaming    bool                  `json:"allowStreaming"`
+	AllowInsecureHTTP bool                  `json:"allowInsecureHttp"`
+	Secrets           *SecretPluginSettings `json:"-"`
 }
 
 type SecretPluginSettings struct {
@@ -88,8 +89,8 @@ func (s PluginSettings) Validate() error {
 	if err != nil || parsed.Host == "" || parsed.User != nil || parsed.RawQuery != "" || parsed.Fragment != "" {
 		return fmt.Errorf("baseUrl must be an absolute URL without credentials, query, or fragment")
 	}
-	if parsed.Scheme != "https" && (s.Provider != "lmstudio" || parsed.Scheme != "http") {
-		return fmt.Errorf("baseUrl must use HTTPS; HTTP is supported only for approved LM Studio local hosts")
+	if parsed.Scheme != "https" && !(parsed.Scheme == "http" && s.AllowInsecureHTTP) {
+		return fmt.Errorf("baseUrl must use HTTPS unless allowInsecureHttp is enabled")
 	}
 	if s.DefaultModel == "" {
 		return fmt.Errorf("defaultModel is required")

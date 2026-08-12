@@ -6,6 +6,7 @@ test('renders the provider policy and secure credential editor', async ({ create
 
   await expect(page.getByLabel('Base URL')).toBeVisible();
   await expect(page.getByLabel('Default model')).toBeVisible();
+  await expect(page.getByLabel('Allow insecure HTTP')).toBeVisible();
   await expect(page.getByLabel('API key')).toBeVisible();
   await expect(page.getByText('Credentials are encrypted by Grafana')).toBeVisible();
 });
