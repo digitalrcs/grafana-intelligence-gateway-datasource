@@ -63,8 +63,9 @@ request and returns a one-row `answer` frame, while the companion panel should u
 - Provider URLs are administrator-controlled and resource paths are fixed; dashboard requests cannot choose a host or
   arbitrary upstream path.
 - OpenAI is restricted to `api.openai.com`. Custom remote providers require HTTPS; this permits an administrator to
-  explicitly select a public or private compatible service. LM Studio may use HTTP only for `localhost`,
-  `host.docker.internal`, or a loopback IP.
+  explicitly select a public or private compatible service. LM Studio may use HTTP for `localhost`,
+  `host.docker.internal`, loopback IPs, and private LAN addresses. A hostname used with LM Studio HTTP must resolve only
+  to loopback or private addresses; public HTTP destinations remain blocked.
 - Redirects are rejected. Link-local, multicast, and unspecified destinations are rejected.
 - Request bodies are capped at 1 MiB and provider responses at 16 MiB.
 - Each data-source instance permits four concurrent calls and 30 calls per minute. Provider/model-specific budget and

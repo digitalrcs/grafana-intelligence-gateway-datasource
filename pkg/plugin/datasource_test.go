@@ -3,6 +3,7 @@ package plugin
 import (
 	"context"
 	"encoding/json"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -92,6 +93,26 @@ func TestProviderErrorsAreRedacted(t *testing.T) {
 	_, err := gateway.requestChat(context.Background(), gatewayRequest{Prompt: &prompt{User: "hello"}})
 	if err == nil || strings.Contains(err.Error(), "secret provider detail") {
 		t.Fatalf("provider error body leaked: %v", err)
+	}
+}
+
+func TestLMStudioAllowsPrivateHTTPAddress(t *testing.T) {
+	target, err := url.Parse("http://192.168.1.25:1234/v1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := validateHost(context.Background(), target, "lmstudio", net.DefaultResolver); err != nil {
+		t.Fatalf("expected private LM Studio address to be allowed: %v", err)
+	}
+}
+
+func TestLMStudioRejectsPublicHTTPAddress(t *testing.T) {
+	target, err := url.Parse("http://8.8.8.8:1234/v1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := validateHost(context.Background(), target, "lmstudio", net.DefaultResolver); err == nil {
+		t.Fatal("expected public HTTP address to be rejected")
 	}
 }
 

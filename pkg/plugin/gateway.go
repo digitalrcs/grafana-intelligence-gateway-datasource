@@ -116,10 +116,8 @@ func validateHost(ctx context.Context, target *url.URL, provider string, resolve
 		return errors.New("baseUrl host is required")
 	}
 	localName := host == "localhost" || host == "host.docker.internal"
-	if target.Scheme == "http" && (provider != "lmstudio" || !localName) {
-		if ip := net.ParseIP(host); ip == nil || !ip.IsLoopback() || provider != "lmstudio" {
-			return errors.New("HTTP is permitted only for LM Studio on localhost, host.docker.internal, or a loopback IP")
-		}
+	if target.Scheme == "http" && provider != "lmstudio" {
+		return errors.New("HTTP is permitted only for LM Studio on localhost, host.docker.internal, or a private network address")
 	}
 	if provider == "openai" && host != "api.openai.com" {
 		return errors.New("OpenAI provider baseUrl must use api.openai.com; use custom for other compatible hosts")
@@ -138,6 +136,9 @@ func validateHost(ctx context.Context, target *url.URL, provider string, resolve
 		ip := address.IP
 		if ip.IsUnspecified() || ip.IsMulticast() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() {
 			return errors.New("provider host resolves to a prohibited network address")
+		}
+		if target.Scheme == "http" && provider == "lmstudio" && !ip.IsLoopback() && !ip.IsPrivate() {
+			return errors.New("LM Studio HTTP endpoints must resolve only to loopback or private network addresses")
 		}
 		if provider == "openai" && (ip.IsLoopback() || ip.IsPrivate()) {
 			return errors.New("remote provider host must not resolve to a loopback or private address")
