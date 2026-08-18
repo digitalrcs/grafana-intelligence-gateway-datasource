@@ -23,15 +23,13 @@ type PluginSettings struct {
 	TimeoutSeconds    int                   `json:"timeoutSeconds"`
 	AllowedModels     []string              `json:"allowedModels"`
 	MaxOutputTokens   int                   `json:"maxOutputTokens"`
-	AllowStreaming    bool                  `json:"allowStreaming"`
 	AllowInsecureHTTP bool                  `json:"allowInsecureHttp"`
 	Secrets           *SecretPluginSettings `json:"-"`
 }
 
 type SecretPluginSettings struct {
-	APIKey       string `json:"apiKey"`
-	BearerToken  string `json:"bearerToken"`
-	ClientSecret string `json:"clientSecret"`
+	APIKey      string `json:"apiKey"`
+	BearerToken string `json:"bearerToken"`
 }
 
 func LoadPluginSettings(source backend.DataSourceInstanceSettings) (*PluginSettings, error) {
@@ -40,9 +38,8 @@ func LoadPluginSettings(source backend.DataSourceInstanceSettings) (*PluginSetti
 		return nil, fmt.Errorf("unmarshal data source settings: %w", err)
 	}
 	settings.Secrets = &SecretPluginSettings{
-		APIKey:       source.DecryptedSecureJSONData["apiKey"],
-		BearerToken:  source.DecryptedSecureJSONData["bearerToken"],
-		ClientSecret: source.DecryptedSecureJSONData["clientSecret"],
+		APIKey:      source.DecryptedSecureJSONData["apiKey"],
+		BearerToken: source.DecryptedSecureJSONData["bearerToken"],
 	}
 	settings.applyDefaults()
 	if err := settings.Validate(); err != nil {
@@ -101,12 +98,15 @@ func (s PluginSettings) Validate() error {
 	if s.MaxOutputTokens < 1 || s.MaxOutputTokens > MaxConfiguredOutputTokens {
 		return fmt.Errorf("maxOutputTokens must be between 1 and %d", MaxConfiguredOutputTokens)
 	}
+	if len(s.AllowedModels) > 0 && !s.ModelAllowed(s.DefaultModel) {
+		return fmt.Errorf("defaultModel must be included in allowedModels")
+	}
 	return nil
 }
 
 func (s PluginSettings) ModelAllowed(model string) bool {
 	if len(s.AllowedModels) == 0 {
-		return true
+		return model == s.DefaultModel
 	}
 	for _, allowed := range s.AllowedModels {
 		if model == allowed {

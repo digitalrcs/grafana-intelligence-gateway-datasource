@@ -23,15 +23,12 @@ Non-secret `jsonData`:
   "timeoutSeconds": 300,
   "allowedModels": ["gpt-4.1-mini", "gpt-4.1"],
   "maxOutputTokens": 256000,
-  "allowStreaming": false,
   "allowInsecureHttp": false
 }
 ```
 
-Write-only `secureJsonData` supports `apiKey`, `bearerToken`, and the reserved `clientSecret` field. A bearer token takes
-precedence over an API key. OAuth client-credentials exchange is not enabled yet because the contract does not define a
-token URL or client ID; storing the client secret now is forward-compatible but it is never sent as a provider bearer
-token.
+Write-only `secureJsonData` supports `apiKey` and `bearerToken`. Configure only the credential required by the provider;
+a bearer token takes precedence over an API key. Unsupported or unused secret fields are intentionally not accepted.
 
 The included provisioning example reads `OPENAI_API_KEY` from the Grafana server/container environment. Never commit a
 real key or put one in dashboard JSON.
@@ -40,7 +37,7 @@ real key or put one in dashboard JSON.
 
 The panel can access these data-source resources through Grafana's authenticated data-source resource API:
 
-- `GET /models` proxies the configured provider model list.
+- `GET /models` returns only provider model IDs permitted by the administrator policy.
 - `POST /chat/completions` and `POST /analyze` accept a bounded gateway request and return the provider's
   OpenAI-compatible response.
 
@@ -73,6 +70,7 @@ request and returns a one-row `answer` frame, while the companion panel should u
 - OpenAI remains restricted to `api.openai.com` even when the HTTP override is enabled.
 - Redirects are rejected. Link-local, multicast, and unspecified destinations are rejected.
 - Request bodies are capped at 1 MiB and provider responses at 16 MiB.
+- Streaming requests are rejected; the production API is buffered and bounded.
 - Each data-source instance permits four concurrent calls and 30 calls per minute. Provider/model-specific budget and
   organization billing limits should remain enabled as the authoritative cost control.
 - Provider response bodies are never included in error messages. Prompts, responses, and credentials are not logged.

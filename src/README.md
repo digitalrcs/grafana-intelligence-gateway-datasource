@@ -2,11 +2,11 @@
 
 Secure server-side AI provider access for the DigitalRCS Grafana Intelligence Gateway panel.
 
-Configure the provider URL, allowed models, timeout, output-token ceiling, and streaming policy in `jsonData`. Store
-credentials only in the API key, bearer token, or OAuth client-secret fields; Grafana encrypts these `secureJsonData`
+Configure the provider URL, allowed models, timeout, and output-token ceiling in `jsonData`. Store
+credentials only in the API key or bearer-token fields; Grafana encrypts these `secureJsonData`
 values and never returns them to browser code.
 
-The backend exposes `GET /models` plus `POST /chat/completions` and `POST /analyze` data-source resources. It enforces the
+The backend exposes `GET /models` plus `POST /chat/completions` and `POST /analyze` data-source resources. Model discovery returns only administrator-approved IDs. It enforces the
 administrator's model and token policies, fixed upstream paths, TLS/host rules, redirect blocking, bounded bodies,
 timeouts, concurrency/rate limits, and sanitized errors. The ordinary query editor can also submit a prompt and returns
 the assessment as a one-row data frame.

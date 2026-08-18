@@ -17,5 +17,4 @@ datasources:
       allowedModels:
         - review-model
       maxOutputTokens: 256000
-      allowStreaming: false
       allowInsecureHttp: true

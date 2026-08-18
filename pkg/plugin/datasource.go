@@ -137,7 +137,61 @@ func (d *Datasource) handleModels(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	defer closeBody(response.Body)
-	copyResponse(w, response)
+	body, err := readBounded(response.Body)
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	filtered, err := filterModelList(body, d.gateway.settings)
+	if err != nil {
+		writeJSONError(w, http.StatusBadGateway, err.Error())
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(filtered)
+}
+
+func filterModelList(body []byte, settings *models.PluginSettings) ([]byte, error) {
+	var payload struct {
+		Data   []json.RawMessage `json:"data"`
+		Models []json.RawMessage `json:"models"`
+	}
+	if err := json.Unmarshal(body, &payload); err != nil {
+		return nil, errorsForAnswer("provider returned an invalid model list")
+	}
+	entries := payload.Data
+	if len(entries) == 0 {
+		entries = payload.Models
+	}
+	seen := make(map[string]struct{}, len(entries))
+	allowed := make([]map[string]string, 0, len(entries))
+	for _, entry := range entries {
+		var modelID string
+		if err := json.Unmarshal(entry, &modelID); err != nil {
+			var item struct {
+				ID   string `json:"id"`
+				Name string `json:"name"`
+			}
+			if err := json.Unmarshal(entry, &item); err != nil {
+				continue
+			}
+			modelID = item.ID
+			if modelID == "" {
+				modelID = item.Name
+			}
+		}
+		modelID = strings.TrimSpace(modelID)
+		if modelID == "" || !settings.ModelAllowed(modelID) {
+			continue
+		}
+		if _, exists := seen[modelID]; exists {
+			continue
+		}
+		seen[modelID] = struct{}{}
+		allowed = append(allowed, map[string]string{"id": modelID, "object": "model"})
+	}
+	return json.Marshal(map[string]any{"object": "list", "data": allowed})
 }
 
 func (d *Datasource) handleChat(w http.ResponseWriter, req *http.Request) {
@@ -165,12 +219,6 @@ func (d *Datasource) handleChat(w http.ResponseWriter, req *http.Request) {
 
 func copyResponse(w http.ResponseWriter, response *http.Response) {
 	contentType := response.Header.Get("Content-Type")
-	if strings.HasPrefix(strings.ToLower(contentType), "text/event-stream") {
-		w.Header().Set("Content-Type", contentType)
-		w.WriteHeader(http.StatusOK)
-		_, _ = io.Copy(w, io.LimitReader(response.Body, maxResponseBytes))
-		return
-	}
 	body, err := readBounded(response.Body)
 	if err != nil {
 		writeError(w, err)

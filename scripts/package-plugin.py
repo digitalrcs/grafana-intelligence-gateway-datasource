@@ -2,13 +2,15 @@
 """Create a Grafana plugin ZIP while preserving executable permissions."""
 
 from pathlib import Path
+import json
 import zipfile
 
 
 PLUGIN_ID = "digitalrcs-intelligencegateway-datasource"
 ROOT = Path(__file__).resolve().parents[1]
 DIST = ROOT / "dist"
-OUTPUT = ROOT / f"{PLUGIN_ID}-1.0.0.zip"
+VERSION = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))["version"]
+OUTPUT = ROOT / f"{PLUGIN_ID}-{VERSION}.zip"
 
 
 def main() -> None:
