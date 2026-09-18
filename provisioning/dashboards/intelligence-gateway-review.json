@@ -1,21 +1,51 @@
 {
-  "annotations": { "list": [] },
+  "annotations": {
+    "list": []
+  },
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
   "links": [],
   "panels": [
     {
+      "id": 2,
+      "type": "text",
+      "title": "What this data source does",
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "**Purpose:** an administrator-managed gateway from Grafana to an AI provider. The backend holds provider credentials and enforces model, token, timeout, and request limits. It returns an answer as a DataFrame or as a resource response to the companion panel.\n\n**Default mode: MOCK — no AI inference.** The table below is a fixed connection receipt, not a data assessment.\n\n**Wider use:** summarize selected query results for incident triage, traffic comparison, or operator handover. The companion panel assembles Grafana DataFrames and instructions; the data source sends them to the configured model. It does not fetch metrics from other data sources by itself.\n\n[See the complete traffic-shift walkthrough and real-provider setup](https://github.com/digitalrcs/grafana-intelligence-gateway/wiki/Reviewer-Walkthrough)."
+      }
+    },
+    {
       "datasource": {
         "type": "digitalrcs-intelligencegateway-datasource",
         "uid": "intelligence-gateway-review"
       },
-      "fieldConfig": { "defaults": {}, "overrides": [] },
-      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 0 },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 7
+      },
       "id": 1,
       "options": {
         "cellHeight": "sm",
-        "footer": { "countRows": false, "fields": "", "reducer": ["sum"], "show": false }
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": ["sum"],
+          "show": false
+        }
       },
       "targets": [
         {
@@ -25,24 +55,29 @@
           },
           "refId": "A",
           "systemPrompt": "You are validating a Grafana data-source plugin.",
-          "userPrompt": "Return the deterministic review response.",
+          "userPrompt": "Compare synthetic request rates: at 12:00 UTC DC1=500 and DC2=500; at 12:35 UTC DC1=1000 and DC2=0. State the total and what cannot be concluded.",
           "model": "review-model",
           "temperature": 0.2,
-          "maxOutputTokens": 100
+          "maxOutputTokens": 1200
         }
       ],
-      "title": "Secure backend review query",
+      "title": "MOCK: verify the secure request path",
       "type": "table"
     }
   ],
   "refresh": false,
   "schemaVersion": 42,
   "tags": ["digitalrcs", "plugin-review"],
-  "templating": { "list": [] },
-  "time": { "from": "now-6h", "to": "now" },
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
   "timepicker": {},
   "timezone": "browser",
   "title": "Intelligence Gateway Data Source Review",
   "uid": "intelligence-gateway-datasource-review",
-  "version": 1
+  "version": 2
 }

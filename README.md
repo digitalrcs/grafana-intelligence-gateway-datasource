@@ -11,6 +11,12 @@ Grafana: `>=11.6.0`
 
 The [GitHub Wiki](https://github.com/digitalrcs/grafana-intelligence-gateway-datasource/wiki) contains the complete installation, configuration, security, panel-integration, review, and troubleshooting guides.
 
+## What this enables
+
+Operators can use an administrator-configured model to summarize selected dashboard data, draft incident handovers, or suggest verification steps. The companion panel gathers Grafana query results and displays the assessment; this data source provides server-side provider access, credentials, and shared request limits. It can also return an answer DataFrame for a supplied prompt through its query editor. It does not collect metrics independently or establish root cause.
+
+The credential-free Docker demo uses a **fixed mock receipt, not AI inference**. Follow the [worked traffic-shift example](https://github.com/digitalrcs/grafana-intelligence-gateway/wiki/Reviewer-Walkthrough) for the purpose, synthetic inputs, real-provider setup, and captured assessment.
+
 ## Configuration contract
 
 Non-secret `jsonData`:
