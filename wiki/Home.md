@@ -6,6 +6,7 @@ This backend data source is the secure provider boundary for the [Grafana Intell
 
 ## Start here
 
+- [Worked example: traffic assessment and real-provider evidence](https://github.com/digitalrcs/grafana-intelligence-gateway/wiki/Reviewer-Walkthrough)
 - [Installation and Quick Start](Installation-and-Quick-Start)
 - [Configuration](Configuration)
 - [Security and Secrets](Security-and-Secrets)

@@ -2,6 +2,8 @@
 
 Secure server-side AI provider access for the DigitalRCS Grafana Intelligence Gateway panel.
 
+The panel can turn selected query results into an incident summary or operational assessment using an administrator-selected model. This data source handles provider access and policy, not metric collection or automated diagnosis. See the [worked traffic-shift example](https://github.com/digitalrcs/grafana-intelligence-gateway/wiki/Reviewer-Walkthrough). The default Docker mock returns a fixed, labeled receipt and performs no inference; a real provider is needed to assess the data.
+
 Configure the provider URL, allowed models, timeout, output-token ceiling, and streaming policy in `jsonData`. Store
 credentials only in the API key, bearer token, or OAuth client-secret fields; Grafana encrypts these `secureJsonData`
 values and never returns them to browser code.

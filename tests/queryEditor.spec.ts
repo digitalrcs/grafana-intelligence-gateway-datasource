@@ -33,5 +33,6 @@ test('returns the deterministic secure backend review response', async ({
   await panelEditPage.setVisualization('Table');
 
   await expect(panelEditPage.refreshPanel()).toBeOK();
-  await expect(panelEditPage.panel.data).toContainText('Review environment response');
+  await expect(panelEditPage.panel.data).toContainText('MOCK MODE');
+  await expect(panelEditPage.panel.data).toContainText('does not analyze your data');
 });
