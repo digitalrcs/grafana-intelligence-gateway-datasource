@@ -14,10 +14,6 @@ This repository is prepared for Grafana's automated validation and manual plugin
 - Official Grafana release workflow with provenance attestation. Initial review archives remain unsigned until Grafana grants a public signature level.
 - ZIP packaging preserves the top-level plugin directory and executable `0755` backend binaries.
 
-## Policy classification to confirm
-
-Grafana assigns Community or Commercial signatures based on the author, intended use, and dependent technologies. DigitalRCS is a business and the plugin can connect to commercially backed AI providers, so DigitalRCS should answer the submission questionnaire literally and ask Grafana whether a Commercial Plugin Subscription is required. Do not represent the plugin as Grafana-certified until review is complete.
-
 ## Submission fields
 
 After publishing a version tag and its generated GitHub release:
