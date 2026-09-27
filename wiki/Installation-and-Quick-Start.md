@@ -33,7 +33,7 @@ Do **not** place the data source inside the panel directory or combine both plug
 ## Install a release
 
 1. Obtain compatible release ZIPs for the [data source](https://github.com/digitalrcs/grafana-intelligence-gateway-datasource/releases) and [panel](https://github.com/digitalrcs/grafana-intelligence-gateway/releases). Once both are available in the Grafana catalog, your administrator can use the catalog installation flow instead.
-2. Extract its single `digitalrcs-intelligencegateway-datasource` directory into Grafana's plugin directory.
+2. Extract each ZIP's plugin-ID directory into Grafana's plugin directory: `digitalrcs-intelligencegateway-panel` and `digitalrcs-intelligencegateway-datasource`, side by side as shown above.
 3. Keep every packaged backend executable executable on Linux (`0755`).
 4. Restart Grafana.
 5. Open **Connections > Data sources > Add new data source** and select **Intelligence Gateway Secure AI**.
