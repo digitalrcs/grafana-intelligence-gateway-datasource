@@ -31,6 +31,10 @@ See [Configuration](../wiki/Configuration.md#upgrading-from-100) before upgradin
 
 ## Release verification
 
+Local preflight passed TypeScript checking, ESLint, the production webpack build, 14 packaging unit tests, 22 top-level Go tests with race detection (plus table cases), and the Mage Linux build. Jest reports no frontend unit tests; browser coverage uses Grafana's plugin-e2e suite instead. The companion panel's seven browser checks passed against this data-source build on Grafana 13.1.3, including the explicitly labeled mock assessment. No new real-provider inference is claimed by those checks.
+
+The updated configuration screenshot was captured from the credential-free Docker instance on Grafana 13.1.3. It shows the current controls and HTTP warning without secrets. The local development host emitted unrelated live-reload connection and Grafana Assistant feature-flag errors; no plugin runtime exception was observed. The production source map confirms only plugin code and host-external Grafana/React modules.
+
 The release workflow builds all supported backend targets, packages the catalog README/assets, and produces the ZIP, SHA1 asset, and GitHub build provenance. Validate the exact downloadable archive and source tag before submitting it to Grafana. An initial-review unsigned warning is expected until Grafana grants a public signature level; do not bypass signing checks for a production-signed release.
 
 The local preflight and final release results are recorded in the release pull request and GitHub release. Passing automated validation does not replace Grafana's manual review or coordinate publication of the companion panel dependency automatically.
