@@ -25,6 +25,7 @@ The final `govulncheck@v1.8.0 -show verbose ./pkg/...` scan reported **No vulner
 - Model discovery returns approved IDs only, with no upstream model metadata or headers.
 - OAuth client-secret and streaming controls are removed. Legacy values are ignored; streaming is rejected even with a legacy enabling value.
 - The explicit insecure-HTTP override remains supported, defaults off, and displays its transport warning.
+- The provider selector uses a three-option radio group. Changing the previous dropdown to Custom reproduced a render-loop crash on Grafana 13.0.9; all seven browser checks passed on that version with the replacement, including Save & test with the HTTP override.
 - API key/bearer credentials remain in Grafana secure settings. Mock receipts remain explicitly labeled as not AI inference.
 
 See [Configuration](../wiki/Configuration.md#upgrading-from-100) before upgrading an instance that used an unrestricted empty model list.

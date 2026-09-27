@@ -1,12 +1,11 @@
 import React, { ChangeEvent } from 'react';
-import { DataSourcePluginOptionsEditorProps } from '@grafana/data';
+import { DataSourcePluginOptionsEditorProps, SelectableValue } from '@grafana/data';
 import {
   Alert,
-  Combobox,
-  type ComboboxOption,
   FieldSet,
   InlineField,
   Input,
+  RadioButtonGroup,
   SecretInput,
   Stack,
   Switch,
@@ -24,7 +23,7 @@ type Props = DataSourcePluginOptionsEditorProps<
   IntelligenceGatewaySecureJsonData
 >;
 
-const providerOptions: Array<ComboboxOption<Provider>> = [
+const providerOptions: Array<SelectableValue<Provider>> = [
   { label: 'OpenAI', value: 'openai', description: 'OpenAI API' },
   { label: 'LM Studio', value: 'lmstudio', description: 'Local OpenAI-compatible server' },
   { label: 'Custom', value: 'custom', description: 'Remote OpenAI-compatible API' },
@@ -60,12 +59,12 @@ export function ConfigEditor({ options, onOptionsChange }: Props) {
 
       <FieldSet label="Provider policy">
         <InlineField label="Provider" labelWidth={24} required>
-          <Combobox
+          <RadioButtonGroup
             id="config-provider"
-            width={40}
+            aria-label="Provider"
             options={providerOptions}
             value={jsonData.provider}
-            onChange={(choice) => updateJson('provider', choice.value ?? 'openai')}
+            onChange={(provider) => updateJson('provider', provider)}
           />
         </InlineField>
         <InlineField

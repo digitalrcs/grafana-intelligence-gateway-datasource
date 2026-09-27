@@ -7,6 +7,7 @@
 - Made local ZIP filenames follow built plugin metadata and added preflight validation plus automated packaging tests.
 - Restricted model discovery to permitted IDs and removed provider-specific metadata. Empty allow-lists now permit only the configured default; nonempty lists must include it.
 - Removed unused OAuth client-secret and streaming controls. Legacy values are ignored and streaming requests are rejected. The explicit insecure-HTTP override remains supported.
+- Replaced the provider dropdown with a three-option radio group to avoid a configuration-editor crash when changing providers on older supported Grafana versions.
 - Patched frontend dependencies while retaining React 18 compatibility. See `docs/RELEASE_VALIDATION.md` for the remaining host-external router advisory assessment.
 - Updated the backend build toolchain to Go 1.26.8 and Grafana's Go SDK to 0.296.5 to address reachable standard-library and gRPC vulnerabilities.
 

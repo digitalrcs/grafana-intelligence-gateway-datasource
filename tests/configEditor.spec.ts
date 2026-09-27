@@ -41,8 +41,7 @@ test('requires the explicit HTTP override for a provider on the Docker network',
 }) => {
   const ds = await readProvisionedDataSource<IntelligenceGatewayDataSourceOptions>({ fileName: 'datasources.yml' });
   const configPage = await createDataSourceConfigPage({ type: ds.type, deleteDataSourceAfterTest: false });
-  await page.getByRole('combobox', { name: /^Provider/ }).click();
-  await page.getByRole('option', { name: /^Custom/ }).click();
+  await page.getByRole('radio', { name: 'Custom', exact: true }).check({ force: true });
   await page.getByLabel('Base URL').fill(ds.jsonData.baseUrl!);
   await page.getByLabel('Default model').fill(ds.jsonData.defaultModel!);
   await page.getByLabel('Allowed models').fill('');
