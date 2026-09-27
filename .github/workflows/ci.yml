@@ -43,6 +43,8 @@ jobs:
         run: npm run lint
       - name: Unit tests
         run: npm run test:ci
+      - name: Test local archive packaging
+        run: python3 -B -m unittest discover -s scripts -p test_package_plugin.py
       - name: Build frontend
         run: npm run build
 

@@ -7,7 +7,11 @@ backend decrypts and adds them to provider requests. Dashboards and browser code
 Plugin ID: `digitalrcs-intelligencegateway-datasource`  
 Grafana: `>=11.6.0`
 
-![Secure provider settings](src/img/secure-provider-settings.png)
+Read the [catalog overview](src/README.md) for product capabilities, requirements, and the first-panel workflow. The catalog README is maintained in `src/README.md` and packaged as `dist/README.md`; this root README covers implementation and development.
+
+Install this data source **alongside**, not inside, the [Grafana Intelligence Gateway panel](https://github.com/digitalrcs/grafana-intelligence-gateway). Both belong to the same Grafana installation, and the configured instance must be in the dashboard's organization. See [Installation and Quick Start](wiki/Installation-and-Quick-Start.md) for exact directory placement and [catalog integration](docs/CATALOG_INTEGRATION.md) for packaging and dependency details.
+
+![The companion panel showing a real assessment using this gateway](src/img/intelligence-gateway-assessment.png)
 
 The [GitHub Wiki](https://github.com/digitalrcs/grafana-intelligence-gateway-datasource/wiki) contains the complete installation, configuration, security, panel-integration, review, and troubleshooting guides.
 
@@ -106,7 +110,9 @@ docker compose up
 ```
 
 Use `npm run package:plugin` instead of Windows `Compress-Archive`: it preserves the Linux backend binary's required
-`0755` executable mode and the explicit top-level plugin directory in the ZIP.
+`0755` executable mode and the explicit top-level plugin directory in the ZIP. The filename comes from the built
+`dist/plugin.json` ID and version; missing required catalog files, referenced images, or backend binaries fail before
+an archive is created. Test the helper with `python -B -m unittest discover -s scripts -p test_package_plugin.py`.
 
 Open <http://localhost:3000> and sign in with `admin` / `admin`. The development stack provisions a deterministic mock
 provider, the data source, and a review dashboard; it requires no external credential. Use **Save & test**, then open
@@ -123,8 +129,9 @@ If port 3000 is already in use, set `GRAFANA_PORT` before starting Compose (for 
 
 In the companion panel, select this instance under **AI provider > Secure AI data source**. The panel stores this
 data-source UID plus non-secret model, temperature, and output choices. **Load models securely** uses the `/models`
-resource, and **Analyze** posts the constructed prompt to `/chat/completions`. Secure mode is buffered in the current
-panel release. Existing direct provider fields remain only for local development and dashboard migration.
+resource, and **Analyze** posts the constructed prompt to `/chat/completions`. The current panel uses this server-side
+connection with buffered responses; it has no direct provider credential fields. Keep the panel's **Queries** connection
+pointed at the data to analyze, and choose this AI connection separately under **AI provider**.
 
 ![The companion panel using the secure data source](src/img/panel-secure-datasource.png)
 
@@ -132,8 +139,10 @@ panel release. Existing direct provider fields remain only for local development
 
 When both repositories are sibling directories, the panel repository's `docker-compose.yaml` mounts both `dist`
 directories and provisions this data source with UID `intelligence-gateway-secure`. Build this frontend and Linux backend,
-build the panel, set `OPENAI_API_KEY` in the shell, and run `docker compose up --build` from the panel repository. Open
-<http://localhost:3004> and use the provisioned CSV assessment dashboard to exercise the intended end-to-end flow.
+build the panel, and run `docker compose up --build` from the panel repository. Open <http://localhost:3004> and use
+**Intelligence Gateway: traffic-shift walkthrough**. The default mock needs no provider credential and performs no
+inference. Follow the [real-provider walkthrough](https://github.com/digitalrcs/grafana-intelligence-gateway/wiki/Reviewer-Walkthrough)
+to configure a separate instance for an actual assessment.
 
 ## License
 

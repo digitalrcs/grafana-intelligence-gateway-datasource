@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Reworked the packaged catalog overview around the Intelligence Gateway companion workflow, with real assessment imagery and documentation/support links.
+- Clarified side-by-side plugin installation, same-organization instance setup, and separate query-data and AI-provider connections.
+- Made local ZIP filenames follow built plugin metadata and added preflight validation plus automated packaging tests.
+
 ## 1.0.0 - 2026-08-12
 
 - Initial secure backend data-source implementation.

@@ -8,25 +8,34 @@
   "executable": "gpx_intelligencegateway",
   "category": "other",
   "info": {
-    "description": "Secure server-side AI provider gateway for the DigitalRCS Grafana Intelligence Gateway panel.",
+    "description": "Companion data source for Grafana Intelligence Gateway. Connect its panels to local or hosted AI with server-side credentials and administrator request policies.",
     "author": {
       "name": "DigitalRCS",
       "url": "https://www.digitalrcs.com"
     },
-    "keywords": ["ai", "llm", "openai", "lmstudio", "secure", "datasource"],
+    "keywords": ["ai", "llm", "openai", "lmstudio", "intelligence", "gateway", "secure", "datasource"],
     "logos": {
       "small": "img/logo.svg",
       "large": "img/logo.svg"
     },
     "links": [
       { "name": "DigitalRCS", "url": "https://www.digitalrcs.com" },
-      { "name": "Source", "url": "https://github.com/DigitalRCS/grafana-intelligence-gateway-datasource" },
-      { "name": "Issues", "url": "https://github.com/DigitalRCS/grafana-intelligence-gateway-datasource/issues" }
+      { "name": "repository", "url": "https://github.com/digitalrcs/grafana-intelligence-gateway-datasource" },
+      { "name": "documentation", "url": "https://github.com/digitalrcs/grafana-intelligence-gateway-datasource/wiki" },
+      {
+        "name": "Grafana Intelligence Gateway panel",
+        "url": "https://github.com/digitalrcs/grafana-intelligence-gateway"
+      },
+      { "name": "raise issue", "url": "https://github.com/digitalrcs/grafana-intelligence-gateway-datasource/issues" },
+      {
+        "name": "license",
+        "url": "https://github.com/digitalrcs/grafana-intelligence-gateway-datasource/blob/main/LICENSE"
+      }
     ],
     "screenshots": [
       {
-        "name": "Secure provider policy",
-        "path": "img/secure-provider-settings.png"
+        "name": "Companion panel assessment using this data source and a local model (synthetic data)",
+        "path": "img/intelligence-gateway-assessment.png"
       },
       {
         "name": "Explicit insecure HTTP override",
