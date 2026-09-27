@@ -2,16 +2,15 @@
 
 ## Provider policy
 
-| Setting               | Purpose                                                                              |
-| --------------------- | ------------------------------------------------------------------------------------ |
-| Provider              | `openai`, `lmstudio`, or an OpenAI-compatible `custom` endpoint.                     |
-| Base URL              | Administrator-controlled URL up to `/v1`. Dashboard queries cannot replace it.       |
-| Default model         | Used when a panel or query omits a model.                                            |
-| Allowed models        | Optional administrator allow-list for requested model IDs.                           |
-| Timeout               | Server-side provider deadline, 1-600 seconds.                                        |
-| Maximum output tokens | Administrator ceiling; the lower panel request cap wins.                             |
-| Allow streaming       | Permits streamed provider requests. Current companion-panel secure mode is buffered. |
-| Allow insecure HTTP   | Explicitly permits non-TLS provider traffic. Default is off.                         |
+| Setting               | Purpose                                                                               |
+| --------------------- | ------------------------------------------------------------------------------------- |
+| Provider              | `openai`, `lmstudio`, or an OpenAI-compatible `custom` endpoint.                      |
+| Base URL              | Administrator-controlled URL up to `/v1`. Dashboard queries cannot replace it.        |
+| Default model         | Used when a panel or query omits a model.                                             |
+| Allowed models        | Exact permitted model IDs; include the default. Empty permits only the default model. |
+| Timeout               | Server-side provider deadline, 1-600 seconds.                                         |
+| Maximum output tokens | Administrator ceiling; the lower panel request cap wins.                              |
+| Allow insecure HTTP   | Explicitly permits non-TLS provider traffic. Default is off.                          |
 
 ![Explicit insecure HTTP override](https://raw.githubusercontent.com/digitalrcs/grafana-intelligence-gateway-datasource/main/src/img/insecure-http-override.png)
 
@@ -19,7 +18,7 @@ HTTPS is required by default. Enable **Allow insecure HTTP** only when an admini
 
 ## Credentials
 
-Enter only the credential required by the provider. A bearer token takes precedence over an API key. The client-secret field is reserved for a future OAuth contract and is not sent as a provider token.
+Enter only the API key or bearer token required by the provider. A bearer token takes precedence over an API key. OAuth client-credentials exchange and streaming are not supported; responses are buffered.
 
 After save, Grafana returns only configured/reset flags through `secureJsonFields`. To replace a secret, select its reset control, enter the new value, and save again.
 
@@ -41,10 +40,15 @@ datasources:
       allowedModels:
         - gpt-4.1-mini
       maxOutputTokens: 256000
-      allowStreaming: false
       allowInsecureHttp: false
     secureJsonData:
       apiKey: ${OPENAI_API_KEY}
 ```
 
 Set `OPENAI_API_KEY` in the Grafana server or container secret environment, not in a dashboard, committed YAML, or browser panel option.
+
+## Upgrading from 1.0.0
+
+An empty allowed-model list now permits only the configured default, not every provider model. Add any additional model IDs used by your panels and include the default model. Model discovery returns only permitted IDs and removes provider-specific metadata.
+
+The nonfunctional OAuth client-secret control and streaming switch have been removed. Legacy `allowStreaming` and `clientSecret` configuration values are ignored; streaming requests are always rejected. Remove unused stored client secrets through provisioning or Grafana's data-source API. The explicit **Allow insecure HTTP** override is unchanged.

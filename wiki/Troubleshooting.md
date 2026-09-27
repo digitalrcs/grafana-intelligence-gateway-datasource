@@ -14,7 +14,7 @@ A backend executable from an older build can continue enforcing the previous loc
 
 ## Model is rejected
 
-The requested model must match `allowedModels` exactly when the allow-list is not empty. Add the model administratively or use the configured default.
+The requested model must match `allowedModels` exactly. If the list is empty, only `defaultModel` is permitted. A nonempty list must include the default. Add the model administratively or use the configured default; secure model discovery shows only permitted IDs.
 
 ## Provider cannot be reached
 

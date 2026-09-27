@@ -177,8 +177,8 @@ func (g *gateway) requestChat(ctx context.Context, request gatewayRequest) (*htt
 	if !g.settings.ModelAllowed(model) {
 		return nil, &gatewayError{status: http.StatusBadRequest, message: "requested model is not allowed by the administrator"}
 	}
-	if request.Stream && !g.settings.AllowStreaming {
-		return nil, &gatewayError{status: http.StatusBadRequest, message: "streaming is disabled for this data source"}
+	if request.Stream {
+		return nil, &gatewayError{status: http.StatusBadRequest, message: "streaming is not supported; use a buffered request"}
 	}
 	if request.Temperature != nil && (*request.Temperature < 0 || *request.Temperature > 2) {
 		return nil, &gatewayError{status: http.StatusBadRequest, message: "temperature must be between 0 and 2"}
@@ -231,9 +231,6 @@ func (g *gateway) requestChat(ctx context.Context, request gatewayRequest) (*htt
 	}
 	providerReq.Header.Set("Content-Type", "application/json")
 	providerReq.Header.Set("Accept", "application/json")
-	if request.Stream {
-		providerReq.Header.Set("Accept", "text/event-stream")
-	}
 	if token := g.settings.AuthorizationToken(); token != "" {
 		providerReq.Header.Set("Authorization", "Bearer "+token)
 	} else if g.settings.Provider == "openai" {

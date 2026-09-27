@@ -61,3 +61,43 @@ func TestModelAllowList(t *testing.T) {
 		t.Fatal("allow-list was not enforced")
 	}
 }
+
+func TestEmptyAllowListPermitsOnlyDefaultModel(t *testing.T) {
+	settings := PluginSettings{DefaultModel: "default-model"}
+	for _, model := range []string{"other-model", "", "DEFAULT-MODEL"} {
+		if settings.ModelAllowed(model) {
+			t.Fatalf("empty allow-list permitted non-default model %q", model)
+		}
+	}
+	if !settings.ModelAllowed("default-model") {
+		t.Fatal("empty allow-list must permit the administrator default")
+	}
+}
+
+func TestDefaultModelMustBeAllowed(t *testing.T) {
+	_, err := LoadPluginSettings(settingsSource(t, PluginSettings{
+		Provider: "openai", BaseURL: "https://api.openai.com/v1", DefaultModel: "default-model",
+		AllowedModels: []string{"other-model"},
+	}))
+	if err == nil || err.Error() != "defaultModel must be included in allowedModels" {
+		t.Fatalf("expected default model outside the allow-list to be rejected, got %v", err)
+	}
+}
+
+func TestAllowListNormalizationRetainsDefaultOnlyPolicy(t *testing.T) {
+	for _, allowed := range [][]string{nil, {}, {"", " "}, {" default-model ", "default-model", ""}} {
+		settings, err := LoadPluginSettings(settingsSource(t, PluginSettings{
+			Provider: "openai", BaseURL: "https://api.openai.com/v1", DefaultModel: " default-model ",
+			AllowedModels: allowed,
+		}))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !settings.ModelAllowed("default-model") || settings.ModelAllowed("other-model") {
+			t.Fatalf("unexpected normalized model policy for %#v", allowed)
+		}
+		if len(settings.AllowedModels) > 1 {
+			t.Fatalf("duplicate or blank model remained in %#v", settings.AllowedModels)
+		}
+	}
+}

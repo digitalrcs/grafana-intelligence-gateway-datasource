@@ -33,15 +33,16 @@ Non-secret `jsonData`:
   "timeoutSeconds": 300,
   "allowedModels": ["gpt-4.1-mini", "gpt-4.1"],
   "maxOutputTokens": 256000,
-  "allowStreaming": false,
   "allowInsecureHttp": false
 }
 ```
 
-Write-only `secureJsonData` supports `apiKey`, `bearerToken`, and the reserved `clientSecret` field. A bearer token takes
-precedence over an API key. OAuth client-credentials exchange is not enabled yet because the contract does not define a
-token URL or client ID; storing the client secret now is forward-compatible but it is never sent as a provider bearer
-token.
+Write-only `secureJsonData` supports `apiKey` and `bearerToken`. A bearer token takes precedence over an API key.
+OAuth client-credentials exchange and streaming are not supported. Legacy `clientSecret` and `allowStreaming`
+configuration values are ignored; remove unused client secrets through provisioning or Grafana's data-source API.
+
+An empty `allowedModels` permits only `defaultModel`. A nonempty list must include the default model. When upgrading
+from 1.0.0, explicitly list any additional models your panels use before saving the configuration.
 
 The included provisioning example reads `OPENAI_API_KEY` from the Grafana server/container environment. Never commit a
 real key or put one in dashboard JSON.
@@ -50,7 +51,7 @@ real key or put one in dashboard JSON.
 
 The panel can access these data-source resources through Grafana's authenticated data-source resource API:
 
-- `GET /models` proxies the configured provider model list.
+- `GET /models` returns only administrator-permitted model IDs, without provider-specific metadata.
 - `POST /chat/completions` and `POST /analyze` accept a bounded gateway request and return the provider's
   OpenAI-compatible response.
 
