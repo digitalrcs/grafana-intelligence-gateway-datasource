@@ -34,17 +34,20 @@ During review, use the separate supplied archives or the provisioned sibling-sou
 
 The older provider-policy screenshot shows an HTTP URL without the override enabled. It is retained as a historical repository asset but is no longer listed as a catalog screenshot. The enabled-override and companion-selector screenshots remain in the catalog gallery.
 
-## Readiness findings — September 27, 2026
+## Readiness status — September 27, 2026
 
 The published data-source `v1.0.0` archive has the correct plugin-ID root, README/license/changelog, frontend assets, three original screenshots, and six backend binaries with executable permissions. Its SHA1 asset and GitHub provenance are present. It still contains the previous README, not this catalog update, and is unsigned as an initial review build.
 
-Items still requiring a release/review decision:
+The 1.0.1 release work resolves the technical findings from the catalog audit:
 
-1. Build a **new versioned release** with the desired source changes, then validate its exact ZIP, source revision, SHA1, and provenance before submission. The local packaging helper is not a substitute for the release workflow's multi-platform build, signing, or attestation.
-2. The separate backend-hardening [PR #11](https://github.com/digitalrcs/grafana-intelligence-gateway-datasource/pull/11) is still draft and conflicted as of this audit. Its behavior is not part of main or this documentation change. It needs independent review/reconciliation before claiming its protections or including it in a release.
-3. Current code retains a reserved OAuth client-secret field but performs no client-credentials exchange. The companion workflow is buffered, not streaming. Model discovery currently returns the provider's list; the allow-list is enforced when a model is requested, and an empty list allows any provider-accepted model. The catalog text must not promise the hardening branch's changed behavior.
-4. Coordinate the two catalog submissions/dependency availability with Grafana. Public catalog lookups did not resolve either ID during this audit. No listing, approval, signature classification, or production certification is inferred from successful builds.
-5. `npm audit --omit=dev` on the current lockfile reports **six high and three moderate affected package entries** (including inherited dependency chains, not necessarily nine distinct vulnerabilities). The entries involve Grafana packages and transitive DOMPurify, js-cookie, js-yaml, React Router, and react-use dependencies. Triage and patch these in a dedicated dependency change, then rebuild and test. Some Grafana packages are externalized to the host at runtime, so audit severity alone does not establish exploitability of the bundled plugin. This catalog/documentation update does not resolve those findings.
+1. The changes proposed in the older draft [PR #11](https://github.com/digitalrcs/grafana-intelligence-gateway-datasource/pull/11) are reconciled with current catalog content and broader backend regression tests, rather than merging its obsolete packaging and dependency changes.
+2. The editor no longer offers a nonfunctional OAuth client-secret field or streaming switch. Legacy settings are ignored and streaming requests rejected. Model discovery exposes only approved IDs; an empty list allows only the default, and a nonempty list must include it. See the [upgrade notes](../wiki/Configuration.md#upgrading-from-100).
+3. High-severity npm dependency findings are patched. The remaining moderate host-external router findings and release verification boundaries are documented in [Release validation](RELEASE_VALIDATION.md). Do not describe a nonzero full npm audit as completely clean.
+
+Release/submission gates remain:
+
+- Publish a **new versioned release**, then validate its exact ZIP, source revision, SHA1, and provenance before submission. The local packaging helper is not a substitute for the release workflow's multi-platform build, signing, or attestation.
+- Coordinate the two catalog submissions/dependency availability with Grafana. Public catalog lookups did not resolve either ID during this audit. No listing, approval, signature classification, or production certification is inferred from successful builds.
 
 Before submitting, run the full plugin validator against the **new release archive**, not only the `metadatavalid` analyzer used in ordinary CI. Verify the provider configuration and intended panel workflow on the build being submitted. Existing release and screenshot evidence is useful provenance, not proof of every future build.
 

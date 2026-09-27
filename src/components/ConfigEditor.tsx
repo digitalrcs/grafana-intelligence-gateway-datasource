@@ -1,12 +1,11 @@
 import React, { ChangeEvent } from 'react';
-import { DataSourcePluginOptionsEditorProps } from '@grafana/data';
+import { DataSourcePluginOptionsEditorProps, SelectableValue } from '@grafana/data';
 import {
   Alert,
-  Combobox,
-  type ComboboxOption,
   FieldSet,
   InlineField,
   Input,
+  RadioButtonGroup,
   SecretInput,
   Stack,
   Switch,
@@ -24,7 +23,7 @@ type Props = DataSourcePluginOptionsEditorProps<
   IntelligenceGatewaySecureJsonData
 >;
 
-const providerOptions: Array<ComboboxOption<Provider>> = [
+const providerOptions: Array<SelectableValue<Provider>> = [
   { label: 'OpenAI', value: 'openai', description: 'OpenAI API' },
   { label: 'LM Studio', value: 'lmstudio', description: 'Local OpenAI-compatible server' },
   { label: 'Custom', value: 'custom', description: 'Remote OpenAI-compatible API' },
@@ -60,12 +59,12 @@ export function ConfigEditor({ options, onOptionsChange }: Props) {
 
       <FieldSet label="Provider policy">
         <InlineField label="Provider" labelWidth={24} required>
-          <Combobox
+          <RadioButtonGroup
             id="config-provider"
-            width={40}
+            aria-label="Provider"
             options={providerOptions}
             value={jsonData.provider}
-            onChange={(choice) => updateJson('provider', choice.value ?? 'openai')}
+            onChange={(provider) => updateJson('provider', provider)}
           />
         </InlineField>
         <InlineField
@@ -110,7 +109,7 @@ export function ConfigEditor({ options, onOptionsChange }: Props) {
         <InlineField
           label="Allowed models"
           labelWidth={24}
-          tooltip="One model ID per line. Leave empty to permit any model accepted by the configured provider."
+          tooltip="One model ID per line. Include the default model. When empty, only the default model is permitted."
         >
           <TextArea
             id="config-allowed-models"
@@ -154,13 +153,6 @@ export function ConfigEditor({ options, onOptionsChange }: Props) {
             }
           />
         </InlineField>
-        <InlineField label="Permit streaming" labelWidth={24}>
-          <Switch
-            id="config-allow-streaming"
-            value={jsonData.allowStreaming}
-            onChange={(event) => updateJson('allowStreaming', event.currentTarget.checked)}
-          />
-        </InlineField>
       </FieldSet>
 
       <FieldSet label="Credentials">
@@ -179,14 +171,6 @@ export function ConfigEditor({ options, onOptionsChange }: Props) {
           value={options.secureJsonData?.bearerToken}
           onChange={(value) => updateSecret('bearerToken', value)}
           onReset={() => resetSecret('bearerToken')}
-        />
-        <SecretField
-          id="config-client-secret"
-          label="OAuth client secret"
-          configured={Boolean(options.secureJsonFields.clientSecret)}
-          value={options.secureJsonData?.clientSecret}
-          onChange={(value) => updateSecret('clientSecret', value)}
-          onReset={() => resetSecret('clientSecret')}
         />
       </FieldSet>
     </Stack>

@@ -25,7 +25,7 @@ _Example of the two plugins working together: the panel presents a local LM Stud
 
 - **A shared provider connection.** Reuse a configured instance across Intelligence Gateway panels, or create separate instances for different providers and teams.
 - **Server-side credentials.** Store the provider API key or bearer token in Grafana's secure fields. Saved credentials show configured/reset state rather than their stored values.
-- **Model selection.** Set a default model and an optional allow-list of models that panels may request.
+- **Model selection.** Set a default model and an optional allow-list of models that panels may request. An empty list permits only the default model; model discovery shows only permitted IDs.
 - **Request limits.** Set a server-side timeout and output-token ceiling. A panel can request a lower output limit, but cannot raise the administrator ceiling.
 - **Transport policy.** Use HTTPS by default. An explicit **Allow insecure HTTP** override supports controlled HTTP-only environments, with the transport risks described below.
 
@@ -43,7 +43,7 @@ See the [installation and plugin-placement guide](https://github.com/digitalrcs/
 
 1. In **Connections → Data sources**, add **Intelligence Gateway Secure AI**.
 2. Choose **OpenAI**, **LM Studio**, or **Custom**. Enter the provider base URL, normally ending in `/v1`, and the exact default model ID. The URL must be reachable from the Grafana server or container, not just your browser.
-3. Enter an API key or bearer token only if your provider requires it. Set an allowed-model list, a timeout, and an output ceiling appropriate to the model and your budget. Leave streaming disabled for the companion-panel workflow.
+3. Enter an API key or bearer token only if your provider requires it. Set an allowed-model list that includes the default model, a timeout, and an output ceiling appropriate to the model and your budget.
 4. Select **Save & test**. This checks the provider's model endpoint; it does not generate an assessment or prove model quality.
 5. Add or edit a **Grafana Intelligence Gateway** panel. Under **Queries**, select the data to analyze—for example, **Dashboard** and an existing source panel.
 6. Under **AI provider → Secure AI data source**, select the instance you just configured. Choose **Load models securely**, select an allowed model, set the analysis instructions, and select **Analyze**.
@@ -56,7 +56,7 @@ Provider requests run on the Grafana server. Selected query data, prompts, and o
 
 Prefer HTTPS. **Allow insecure HTTP** disables the HTTPS requirement for that instance regardless of hostname or IP classification. Use it only with appropriate trusted-network and firewall controls: prompts, responses, and credentials can otherwise be intercepted in transit. It is not a way to bypass certificate validation for an HTTPS endpoint.
 
-Supported authentication is a provider API key or bearer token. OAuth client-credentials exchange is not implemented; the reserved client-secret field is not an operational OAuth setup. The companion panel uses buffered, non-streaming responses. Custom providers and models must support the request format used by the gateway; OpenAI compatibility is not a guarantee that every model or feature is supported.
+Supported authentication is a provider API key or bearer token. OAuth client-credentials exchange and streaming are not supported. Responses are buffered. Custom providers and models must support the request format used by the gateway; OpenAI compatibility is not a guarantee that every model or feature is supported.
 
 The query editor can also submit a supplied prompt and return an answer as a Grafana data frame, but it does not automatically collect other panels' data. Generated assessments require human verification and do not establish root cause or perform remediation.
 
