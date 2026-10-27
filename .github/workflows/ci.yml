@@ -70,7 +70,7 @@ jobs:
         uses: golangci/golangci-lint-action@82606bf257cbaff209d206a39f5134f0cfbfd2ee # v9.2.1
         with:
           version: latest
-          args: ./...
+          args: --max-issues-per-linter=0 --max-same-issues=0 ./...
 
       - name: Check reachable Go vulnerabilities
         if: steps.check-for-backend.outputs.has-backend == 'true'

@@ -119,10 +119,10 @@ func (s PluginSettings) Validate() error {
 	if s.Provider == "copilot-studio" {
 		allowedHost := parsed.Hostname() == "directline.botframework.com" || parsed.Hostname() == "europe.directline.botframework.com" || parsed.Hostname() == "india.directline.botframework.com"
 		if parsed.Scheme != "https" || !allowedHost || (parsed.Port() != "" && parsed.Port() != "443") || parsed.Path != "/v3/directline" || parsed.RawPath != "" {
-			return fmt.Errorf("Copilot Studio requires HTTPS on a supported Direct Line host at /v3/directline")
+			return fmt.Errorf("the Copilot Studio provider requires HTTPS on a supported Direct Line host at /v3/directline")
 		}
 		if s.Secrets == nil || strings.TrimSpace(s.Secrets.DirectLineSecret) == "" {
-			return fmt.Errorf("Copilot Studio requires an approved channel secret in secureJsonData.directLineSecret")
+			return fmt.Errorf("the Copilot Studio provider requires an approved channel secret in secureJsonData.directLineSecret")
 		}
 	}
 	if s.TimeoutSeconds < 1 || s.TimeoutSeconds > MaxTimeoutSeconds {
