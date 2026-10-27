@@ -20,6 +20,8 @@ Copilot Studio is a **bounded Direct Line preview** for an organization-approved
 
 ### Security and operational behavior
 
+- Clearly name the supplied fixture **DEMO ONLY - Mock AI (no inference)** and show a settings warning with an own-provider checklist only for its explicitly marked Custom/mock URL configuration. The fixed receipt verifies delivery, not AI understanding. Provider/URL changes clear the notice; backend transport and authentication are unaffected.
+- Separate credential-free mock review from real assessment. Keep the mock instance and add a separate real Intelligence Gateway Secure AI instance with your own reachable provider, compatible model, and credential if needed. Select it under the panel's **AI provider**, not **Queries**. No cloud credentials or hosted model access are bundled.
 - Provider credentials remain in Grafana `secureJsonData`; no provider secret is added to dashboard JSON, browser configuration, image metadata, or ordinary query results.
 - Keep provider hosts, model/vision allow-lists, token ceilings, timeouts, redirects, payload sizes, and rate/concurrency policies on the backend.
 - Fail additional concurrent requests promptly with HTTP 429 instead of retaining queued image payloads. Resource responses are JSON, non-cacheable, and protected against content-type sniffing; provider error bodies are not exposed.

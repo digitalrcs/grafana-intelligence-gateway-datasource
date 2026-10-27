@@ -1,15 +1,17 @@
 import React, { ComponentProps, useState } from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { DEFAULT_CONFIG, type Provider } from '../types';
+import { DEFAULT_CONFIG, type IntelligenceGatewayDataSourceOptions, type Provider } from '../types';
 import { ConfigEditor } from './ConfigEditor';
 
 type Options = ComponentProps<typeof ConfigEditor>['options'];
 
 function Harness({
   provider,
+  jsonData = {},
   onChange = () => undefined,
 }: {
   provider: Provider;
+  jsonData?: Partial<IntelligenceGatewayDataSourceOptions>;
   onChange?: (options: Options) => void;
 }) {
   const [options, setOptions] = useState<Options>({
@@ -17,7 +19,7 @@ function Harness({
     uid: 'secure-ai-test',
     name: 'Test secure AI',
     type: 'digitalrcs-intelligencegateway-datasource',
-    jsonData: { ...DEFAULT_CONFIG, provider },
+    jsonData: { ...DEFAULT_CONFIG, provider, ...jsonData },
     secureJsonData: {},
     secureJsonFields: {},
   } as Options);
@@ -33,6 +35,58 @@ function Harness({
 }
 
 describe('ConfigEditor provider controls', () => {
+  const mockTitle = 'DEMO ONLY - Mock AI (no inference)';
+  const mockFixture = { reviewMock: true, baseUrl: 'http://mock-ai:8080/v1' };
+
+  test('shows the marked mock connection notice and a separate real-provider checklist', () => {
+    render(<Harness provider="custom" jsonData={mockFixture} />);
+
+    expect(screen.getByText(mockTitle)).toBeInTheDocument();
+    expect(screen.getByText(/This demo returns a fixed delivery receipt/)).toBeInTheDocument();
+    expect(screen.getByText('Create a separate Intelligence Gateway Secure AI data source.')).toBeInTheDocument();
+    expect(screen.getByText(/not its Queries selector/)).toBeInTheDocument();
+    expect(screen.queryByRole('checkbox', { name: /mock/i })).not.toBeInTheDocument();
+  });
+
+  test('normalizes surrounding whitespace and trailing slashes for the marked mock URL', () => {
+    render(<Harness provider="custom" jsonData={{ reviewMock: true, baseUrl: ' http://mock-ai:8080/v1/ ' }} />);
+
+    expect(screen.getByText(mockTitle)).toBeInTheDocument();
+  });
+
+  test.each([undefined, false])('does not label an unmarked or disabled instance as mock (%s)', (reviewMock) => {
+    render(<Harness provider="custom" jsonData={{ baseUrl: mockFixture.baseUrl, reviewMock }} />);
+
+    expect(screen.queryByText(mockTitle)).not.toBeInTheDocument();
+    expect(DEFAULT_CONFIG).not.toHaveProperty('reviewMock');
+  });
+
+  test('clears the notice when the provider changes even if the fixture marker remains', () => {
+    render(<Harness provider="custom" jsonData={mockFixture} />);
+    expect(screen.getByText(mockTitle)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('radio', { name: 'LM Studio' }));
+    expect(screen.queryByText(mockTitle)).not.toBeInTheDocument();
+  });
+
+  test('clears the notice when the base URL changes even if the fixture marker remains', () => {
+    render(<Harness provider="custom" jsonData={mockFixture} />);
+    expect(screen.getByText(mockTitle)).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/Base URL/), {
+      target: { value: 'https://ai.example.com/v1' },
+    });
+    expect(screen.queryByText(mockTitle)).not.toBeInTheDocument();
+  });
+
+  test.each(['https://mock-ai:8080/v1', 'http://mock-ai:8080/v1/other', 'http://mock-ai:8080/v1?real=true'])(
+    'does not label another marked endpoint as the supplied mock: %s',
+    (baseUrl) => {
+      render(<Harness provider="custom" jsonData={{ reviewMock: true, baseUrl }} />);
+      expect(screen.queryByText(mockTitle)).not.toBeInTheDocument();
+    }
+  );
+
   test('disables the rendered output-token input for Copilot Studio and shows only its channel credential', () => {
     render(<Harness provider="copilot-studio" />);
 

@@ -1,5 +1,7 @@
 # Intelligence Gateway Secure AI data source
 
+> **The included demo does not run AI.** **DEMO ONLY - Mock AI (no inference)** returns a fixed delivery receipt, not an assessment of data or images. First verify that credential-free path; then [add a separate real provider](Installation-and-Quick-Start#phase-2-real-assessment-with-your-own-provider) with your own reachable model and required credential. No cloud credentials or hosted AI access are included.
+
 This backend data source is the secure provider boundary for the [Grafana Intelligence Gateway panel](https://github.com/digitalrcs/grafana-intelligence-gateway). Grafana encrypts provider credentials in `secureJsonData`; only the Go backend decrypts them and adds them to outbound provider requests. Dashboard JSON and browser code receive neither the stored value nor provider error bodies.
 
 Designed specifically for the Intelligence Gateway dashboard experience, the data source supplies model access rather than the metrics being analyzed. Install the two plugins side by side, then select a configured instance in the panel's **AI provider** options. The panel's **Queries** connection remains your metric/table source or Grafana's Dashboard data source.

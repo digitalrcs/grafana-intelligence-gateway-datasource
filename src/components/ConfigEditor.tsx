@@ -34,6 +34,10 @@ const providerOptions: Array<SelectableValue<Provider>> = [
 
 export function ConfigEditor({ options, onOptionsChange }: Props) {
   const jsonData = { ...DEFAULT_CONFIG, ...options.jsonData };
+  const isReviewMock =
+    jsonData.reviewMock === true &&
+    jsonData.provider === 'custom' &&
+    jsonData.baseUrl.trim().replace(/\/+$/, '') === 'http://mock-ai:8080/v1';
 
   const updateJson = <K extends keyof IntelligenceGatewayDataSourceOptions>(
     key: K,
@@ -55,6 +59,27 @@ export function ConfigEditor({ options, onOptionsChange }: Props) {
 
   return (
     <Stack direction="column" gap={2}>
+      {isReviewMock ? (
+        <Alert title="DEMO ONLY - Mock AI (no inference)" severity="warning">
+          <p>
+            This demo returns a fixed delivery receipt. No AI model is running, and the receipt does not understand or
+            assess your data or images. Keep this mock instance for the credential-free connection test.
+          </p>
+          <p>To get a real assessment:</p>
+          <ol>
+            <li>Create a separate Intelligence Gateway Secure AI data source.</li>
+            <li>
+              Configure your own provider, a Base URL reachable from the Grafana server, a compatible model, and its
+              secure credential if required. No cloud credentials are supplied with the demo.
+            </li>
+            <li>Select Save &amp; test. For images, also enable image analysis and approve an image-capable model.</li>
+            <li>
+              Select that new instance in the panel&apos;s AI provider &gt; Secure AI data source setting, not its
+              Queries selector. Then run Analyze or Analyze images with synthetic input.
+            </li>
+          </ol>
+        </Alert>
+      ) : null}
       <Alert title="Server-side secret boundary" severity="info">
         Credentials are encrypted by Grafana and used only by this backend. They are never returned to dashboards or
         browser code. Restrict who can edit and query this data source.

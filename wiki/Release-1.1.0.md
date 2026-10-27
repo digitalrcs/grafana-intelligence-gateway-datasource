@@ -4,6 +4,7 @@ The 1.1.0 companion pair adds **data-only**, **images-only**, and **combined dat
 
 ## Data-source changes
 
+- Prominent **DEMO ONLY - Mock AI (no inference)** fixture name and conditional settings notice. The fixed receipt proves delivery only; a [separate real provider](Installation-and-Quick-Start#phase-2-real-assessment-with-your-own-provider) is required for genuine data or image assessment. No hosted AI access or credentials are bundled.
 - Six provider profiles: OpenAI, LM Studio, Open WebUI, Grafana LLM, Copilot Studio, and Custom.
 - Opt-in image policy with a separate approved vision-model list, capability discovery, and bounded PNG/JPEG validation.
 - Backend limits for count, decoded size, dimensions, pixels, encoded request size, output tokens, timeouts, and concurrency.

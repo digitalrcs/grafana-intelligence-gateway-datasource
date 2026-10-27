@@ -6,6 +6,8 @@ Intelligence Gateway Secure AI by **DigitalRCS** is purpose-built to accompany t
 
 Use local models through **LM Studio**, hosted models through **OpenAI**, **Open WebUI**, or another compatible **Chat Completions API**. Connect to a configured **Grafana LLM app**, or an approved published **Copilot Studio** agent through Direct Line. Administrators choose the connection, allowed models or agent aliases, and request limits; dashboard authors choose the data and question to analyze.
 
+> **The included Docker demo does not run an AI model.** Its **DEMO ONLY - Mock AI (no inference)** connection returns a fixed delivery receipt, not an assessment of data or images. No cloud credentials or hosted model access are included. For real analysis, configure your own reachable provider and compatible model in a separate secure data-source instance.
+
 ## Built for Intelligence Gateway
 
 The two plugins work together but have different responsibilities:
@@ -52,6 +54,8 @@ See the [installation and plugin-placement guide](https://github.com/digitalrcs/
 
 ## Connect your first panel
 
+For a two-phase trial, first use the supplied mock for a credential-free delivery check. Keep that instance unchanged, then follow this checklist to add a **separate real AI connection**. The [quick-start guide](https://github.com/digitalrcs/grafana-intelligence-gateway-datasource/wiki/Installation-and-Quick-Start) separates the mock test from genuine inference.
+
 1. In **Connections → Data sources**, add **Intelligence Gateway Secure AI**.
 2. Choose the provider and enter its base URL and exact default model or agent alias. Chat Completions URLs commonly end in `/v1`; Open WebUI, Grafana LLM, and Copilot Studio have provider-specific paths shown in the configuration guide. The URL must be reachable from the Grafana server or container.
 3. Enter the required credential in its secure field. Set an allow-list that includes the default, a timeout, and supported generation limits. For images, separately enable **Enable image analysis** and fill **Allowed vision models** with verified image-capable models or the approved agent alias.
@@ -60,6 +64,8 @@ See the [installation and plugin-placement guide](https://github.com/digitalrcs/
 6. Under **AI provider → Secure AI data source**, select the instance you just configured. Choose **Load models securely**, select an allowed model, and set the analysis instructions. Select **Analyze** for data only, or **Images** to capture/upload, preview, and then explicitly **Analyze images**.
 
 Do not select this AI data source as the panel's metric source when your intention is to analyze another panel's data. The metric/query connection and the AI provider connection are separate. The [panel integration guide](https://github.com/digitalrcs/grafana-intelligence-gateway-datasource/wiki/Panel-Integration) explains both selectors.
+
+The provider URL is reached from the **Grafana server/container**, not your browser. For example, LM Studio on a Docker Desktop host can use `http://host.docker.internal:1234/v1` when it accepts connections from that container. A provider on another machine needs its reachable network address. `localhost` inside Docker refers to the container itself. Use HTTPS, or approve the HTTP override only for a trusted connection. Leave the credential blank only when the provider is intentionally configured without authentication.
 
 ## Security and compatibility
 

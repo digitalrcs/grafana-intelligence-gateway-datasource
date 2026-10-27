@@ -1,6 +1,8 @@
 # Testing and Review
 
-## Deterministic Grafana review
+> **The supplied demo is not an AI service.** **DEMO ONLY - Mock AI (no inference)** returns a fixed delivery receipt. It cannot understand data or images, and no real-provider credentials or hosted model access are included. Complete the two phases below separately.
+
+## Phase 1: deterministic connection review (no credentials)
 
 ```bash
 npm ci
@@ -15,17 +17,21 @@ docker compose up --build
 
 Open <http://localhost:3000>, sign in with `admin` / `admin`, and verify:
 
-1. **Connections > Data sources > Intelligence Gateway Review AI > Save & test** reports success.
+1. **Connections > Data sources > DEMO ONLY - Mock AI (no inference)** shows a prominent demo notice and a real-provider checklist; **Save & test** reports success.
 2. **Dashboards > Intelligence Gateway Data Source Review** loads the provisioned data-source query.
 3. Running the query returns **MOCK MODE — no AI inference performed** and explains that the fixed receipt does not analyze the input.
 
 The mock provider is isolated to Docker Compose, accepts no credential, logs no request content, and produces a deterministic response. It exists so reviewers do not need DigitalRCS or OpenAI secrets.
 
-## Production-provider check
+## Phase 2: real-provider assessment (your provider)
 
 For an end-to-end operational use case, follow the [traffic-shift reviewer walkthrough](https://github.com/digitalrcs/grafana-intelligence-gateway/wiki/Reviewer-Walkthrough). It explains the two plugins' responsibilities, supplies synthetic DC1/DC2 request rates, and shows how to connect LM Studio and check that the response changes with the input. The default mock proves connectivity and rendering only, not inference quality.
 
-Configure a separate instance with a real provider and credential. Confirm model discovery and a small test request, then verify that dashboard JSON contains the data-source UID but no credential. Do not paste secrets into issues, screenshots, logs, or exported dashboards.
+Keep the mock instance configured; create a **separate Intelligence Gateway Secure AI** instance using the [own-provider checklist](Installation-and-Quick-Start#phase-2-real-assessment-with-your-own-provider). Supply your own reachable provider URL, compatible model, and secure credential if required, then **Save & test**. Select this new instance under the panel's **AI provider → Secure AI data source**, not **Queries**. For images, explicitly enable image analysis and approve an image-capable model.
+
+URLs are reached from the Grafana server/container. LM Studio on the Docker Desktop host can use `http://host.docker.internal:1234/v1` if its server accepts that connection; a remote provider needs its reachable network address. `localhost` is not the Docker host. Hosted access and credentials are not bundled with the demo.
+
+Confirm permitted model discovery and a small synthetic inference request, then verify that dashboard JSON contains the data-source UID but no credential. A successful **Save & test** alone is not an inference result. Do not paste secrets into issues, screenshots, logs, or exported dashboards.
 
 ## 1.1.0 companion-panel checks
 

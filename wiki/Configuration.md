@@ -1,5 +1,7 @@
 # Configuration
 
+> The supplied **DEMO ONLY - Mock AI (no inference)** instance is a credential-free delivery test, not a model. Keep it unchanged and use the [own-provider checklist](Installation-and-Quick-Start#phase-2-real-assessment-with-your-own-provider) to add a separate real connection. Select the real instance under the panel's **AI provider**, not its metric **Queries** selector.
+
 ## Provider policy
 
 | Setting               | Purpose                                                                                                        |
@@ -15,6 +17,8 @@
 | Allowed vision models | Exact image-capable model IDs, one per line. Must be a subset of the allowed/default model policy.             |
 
 ## Provider examples
+
+Provider URLs must be reachable from the Grafana server/container. The mock fixture alone contains the non-secret `reviewMock: true` notice marker; normal configurations omit it. Its warning requires Custom plus `http://mock-ai:8080/v1` (ignoring surrounding whitespace and trailing slashes), clears on provider/URL changes, and does not alter backend routing or authentication. There is no mock toggle in the editor.
 
 | Provider       | Example Base URL                                                           | Model and credentials                                                                                                                                                                  |
 | -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

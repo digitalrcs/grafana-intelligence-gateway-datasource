@@ -21,6 +21,15 @@ Copy the **hash value** from the SHA1 asset into Grafana's SHA1 field, not the c
 
 Install both Intelligence Gateway 1.1.0 packages side by side. Follow the [panel reviewer walkthrough](https://github.com/digitalrcs/grafana-intelligence-gateway/wiki/Reviewer-Walkthrough) and [data-source test guide](https://github.com/digitalrcs/grafana-intelligence-gateway-datasource/wiki/Testing-and-Review). The provisioned Docker environment uses a deterministic mock and synthetic traffic data without external credentials. Its labeled receipt verifies transport, not AI understanding.
 
+> **DEMO ONLY - Mock AI (no inference)** is the supplied test connection. It runs no model and cannot assess data or images. No cloud credentials or hosted AI access are shipped. A mock receipt must not be counted as genuine inference.
+
+Review in two phases:
+
+1. **Mock delivery check:** keep the provisioned mock instance, verify its prominent settings notice, select **Save & test**, and run the synthetic fixture. Expect a labeled receipt only.
+2. **Real assessment:** the reviewer supplies a reachable provider and compatible model. Create a **separate Intelligence Gateway Secure AI** instance, configure the provider/base URL/model and required secure credential, then **Save & test**. Enable image analysis and approve a vision model for image tests. Select the new instance under the panel's **AI provider → Secure AI data source**, not **Queries**. Keep the mock available for repeatable transport tests.
+
+The URL is accessed by the Grafana server/container, not the reviewer's browser. For LM Studio on the Docker Desktop host, `http://host.docker.internal:1234/v1` is an example when the server accepts container connections; use a reachable network address for a remote host. A trusted-network HTTP override is required for HTTP. **Save & test** checks connectivity/model access or Direct Line token exchange, not inference. See the [complete own-provider checklist](https://github.com/digitalrcs/grafana-intelligence-gateway-datasource/wiki/Installation-and-Quick-Start#phase-2-real-assessment-with-your-own-provider).
+
 Verify all three input modes:
 
 1. **Data only:** configure the panel's Queries using Grafana's Dashboard data source to reuse the source chart; select **Analyze** without attaching images.

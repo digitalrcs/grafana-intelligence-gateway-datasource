@@ -11,6 +11,15 @@ Read the [catalog overview](src/README.md) for product capabilities, requirement
 
 Install this data source **alongside**, not inside, the [Grafana Intelligence Gateway panel](https://github.com/digitalrcs/grafana-intelligence-gateway). Both belong to the same Grafana installation, and the configured instance must be in the dashboard's organization. See [Installation and Quick Start](wiki/Installation-and-Quick-Start.md) for exact directory placement and [catalog integration](docs/CATALOG_INTEGRATION.md) for packaging and dependency details.
 
+> **Demo only: the supplied mock does not run AI.** The provisioned **DEMO ONLY - Mock AI (no inference)** connection returns a fixed delivery receipt. It does not understand data or images. No cloud credentials or hosted AI access are included. A successful mock request proves delivery, not an assessment.
+
+### Two-phase setup
+
+1. **Credential-free connection check:** keep the supplied mock instance and verify its labeled receipt.
+2. **Real assessment:** add a **separate** Intelligence Gateway Secure AI instance under **Connections → Data sources**. Supply your reachable provider URL, compatible model, and secure credential if required; select **Save & test**. Select this new instance under the panel's **AI provider → Secure AI data source**, not **Queries**. For images, enable image analysis and approve the actual vision model. Use synthetic input for the first real request.
+
+Provider URLs are resolved by the Grafana server/container, not the browser. For LM Studio on a Docker Desktop host, an example is `http://host.docker.internal:1234/v1`; the server must accept that connection. Use a reachable network address for a remote provider. Enable the HTTP override only on an approved trusted network. See the [complete own-provider checklist](wiki/Installation-and-Quick-Start.md#phase-2-real-assessment-with-your-own-provider).
+
 ![The companion panel showing a real assessment using this gateway](src/img/intelligence-gateway-assessment.png)
 
 The [GitHub Wiki](https://github.com/digitalrcs/grafana-intelligence-gateway-datasource/wiki) contains the complete installation, configuration, security, panel-integration, review, and troubleshooting guides.
@@ -31,7 +40,7 @@ The companion panel supports three input combinations through the same required 
 
 Images can come from the rendered dashboard, selected rendered panels, or PNG/JPEG uploads. Capturing a different panel does **not** retrieve its raw query results. The **Queries** source and **AI provider > Secure AI data source** remain separate connections. Uploaded or captured images always require an explicit send; automatic analysis is text-only.
 
-The credential-free Docker demo uses a **fixed mock receipt, not AI inference**. Follow the [worked traffic-shift example](https://github.com/digitalrcs/grafana-intelligence-gateway/wiki/Reviewer-Walkthrough) for the purpose, synthetic inputs, real-provider setup, and captured assessment.
+The credential-free Docker demo uses a **fixed mock receipt, not AI inference**. Follow the [worked traffic-shift example](https://github.com/digitalrcs/grafana-intelligence-gateway/wiki/Reviewer-Walkthrough) for the purpose, synthetic inputs, separate real-provider setup, and captured assessment.
 
 ## Configuration contract
 

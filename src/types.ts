@@ -24,6 +24,8 @@ export interface IntelligenceGatewayDataSourceOptions extends DataSourceJsonData
   allowInsecureHttp?: boolean;
   enableVision?: boolean;
   allowedVisionModels?: string[];
+  /** Non-secret notice marker for the supplied mock fixture; never changes provider transport. */
+  reviewMock?: boolean;
 }
 
 /** Values are written on save and never returned to browser code. */
@@ -33,7 +35,9 @@ export interface IntelligenceGatewaySecureJsonData {
   directLineSecret?: string;
 }
 
-export const DEFAULT_CONFIG: Required<Omit<IntelligenceGatewayDataSourceOptions, keyof DataSourceJsonData>> = {
+export const DEFAULT_CONFIG: Required<
+  Omit<IntelligenceGatewayDataSourceOptions, keyof DataSourceJsonData | 'reviewMock'>
+> = {
   provider: 'openai',
   baseUrl: 'https://api.openai.com/v1',
   defaultModel: 'gpt-4.1-mini',

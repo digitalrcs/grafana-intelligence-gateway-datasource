@@ -13,6 +13,7 @@ test('renders the provider policy and secure credential editor', async ({
   await expect(page.getByLabel('Default model')).toBeVisible();
   await expect(page.getByLabel('Allow insecure HTTP')).toBeVisible();
   await expect(page.getByLabel('API key')).toBeVisible();
+  await expect(page.getByText('DEMO ONLY - Mock AI (no inference)', { exact: true })).toHaveCount(0);
   await expect(page.getByLabel('OAuth client secret')).toHaveCount(0);
   await expect(page.getByLabel('Permit streaming')).toHaveCount(0);
   await page.getByLabel('Allow insecure HTTP').check({ force: true });
@@ -20,6 +21,29 @@ test('renders the provider policy and secure credential editor', async ({
   await page.getByLabel('Allow insecure HTTP').uncheck({ force: true });
   await expect(page.getByText('Insecure HTTP override enabled')).toHaveCount(0);
   await expect(page.getByText('Credentials are encrypted by Grafana')).toBeVisible();
+});
+
+test('labels only the supplied mock and clears its notice when the connection changes', async ({
+  gotoDataSourceConfigPage,
+  readProvisionedDataSource,
+  page,
+}) => {
+  const ds = await readProvisionedDataSource<IntelligenceGatewayDataSourceOptions>({ fileName: 'datasources.yml' });
+  const configPage = await gotoDataSourceConfigPage(ds.uid);
+  const receiptNotice = page.getByText(/This demo returns a fixed delivery receipt/);
+
+  await expect(configPage).toHaveAlert('warning', { hasText: 'DEMO ONLY - Mock AI (no inference)' });
+  await expect(receiptNotice).toBeVisible();
+  await expect(page.getByText('Create a separate Intelligence Gateway Secure AI data source.')).toBeVisible();
+  await expect(page.getByText(/not its Queries selector/)).toBeVisible();
+
+  // Do not save: leave the supplied mock unchanged for other tests and reviewers.
+  await page.getByRole('radio', { name: 'LM Studio', exact: true }).check({ force: true });
+  await expect(receiptNotice).toHaveCount(0);
+  await page.getByRole('radio', { name: 'Custom', exact: true }).check({ force: true });
+  await expect(receiptNotice).toBeVisible();
+  await page.getByRole('textbox', { name: 'Base URL', exact: true }).fill('https://ai.example.com/v1');
+  await expect(receiptNotice).toHaveCount(0);
 });
 
 test('rejects OpenAI configuration without a server-side credential', async ({
