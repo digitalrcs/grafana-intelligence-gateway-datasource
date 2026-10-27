@@ -105,14 +105,14 @@ func (s PluginSettings) Validate() error {
 	}
 	if s.Provider == "grafana-llm" {
 		if !strings.HasSuffix(parsed.Path, GrafanaLLMBasePath) || parsed.RawPath != "" || path.Clean(parsed.Path) != parsed.Path {
-			return fmt.Errorf("Grafana LLM baseUrl must end with %s (a Grafana subpath may precede it)", GrafanaLLMBasePath)
+			return fmt.Errorf("the Grafana LLM baseUrl must end with %s (a Grafana subpath may precede it)", GrafanaLLMBasePath)
 		}
 		if s.Secrets == nil || strings.TrimSpace(s.Secrets.BearerToken) == "" {
-			return fmt.Errorf("Grafana LLM requires a Grafana service-account token in secureJsonData.bearerToken")
+			return fmt.Errorf("the Grafana LLM requires a Grafana service-account token in secureJsonData.bearerToken")
 		}
 		for _, model := range append([]string{s.DefaultModel}, s.AllowedModels...) {
 			if model != "base" && model != "large" {
-				return fmt.Errorf("Grafana LLM models must use the base or large aliases configured in grafana-llm-app")
+				return fmt.Errorf("the Grafana LLM models must use the base or large aliases configured in grafana-llm-app")
 			}
 		}
 	}
