@@ -8,12 +8,12 @@
   "executable": "gpx_intelligencegateway",
   "category": "other",
   "info": {
-    "description": "Companion data source for Grafana Intelligence Gateway. Connect its panels to local or hosted AI with server-side credentials and administrator request policies.",
+    "description": "Secure companion for Intelligence Gateway data and image assessments. Connect to local or hosted AI with server-side credentials and administrator request policies.",
     "author": {
       "name": "DigitalRCS",
       "url": "https://www.digitalrcs.com"
     },
-    "keywords": ["ai", "llm", "openai", "lmstudio", "intelligence", "gateway", "secure", "datasource"],
+    "keywords": ["ai", "llm", "openai", "lmstudio", "intelligence", "gateway", "vision", "secure", "datasource"],
     "logos": {
       "small": "img/logo.svg",
       "large": "img/logo.svg"

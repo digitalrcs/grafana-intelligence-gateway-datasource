@@ -42,11 +42,19 @@ Do **not** place the data source inside the panel directory or combine both plug
 
 Installing either package does not create a data-source instance, supply a credential, or select it in existing dashboards. Grafana's installer can resolve declared plugin dependencies from its plugin repository, but the dependent package must be available there. During review, install both provided archives explicitly. The panel declares this data source as a required dependency; this data source does not declare a reverse dependency on the panel.
 
+### Upgrade the pair to 1.1.0
+
+For the full image workflow, install version 1.1.0 of both plugins. Back up the existing plugin directories and Grafana configuration, replace each complete package in its own directory, and restart Grafana. Verify the installed versions on the intended server and reload the whole browser page before testing; a dashboard query refresh does not reload plugin code. Existing data-source credentials and dashboard UIDs are not meant to be recreated during this upgrade.
+
+Image analysis is opt-in: existing text-only instances do not gain an image-model allow-list automatically. Enable it only after confirming the provider/model accepts images. Follow [Panel Integration](Panel-Integration) for data-only, images-only, and combined assessments, and [Release 1.1.0](Release-1.1.0) for validation boundaries. Do not treat the presence of a source branch or this guide as proof that a particular release ZIP has been published or approved.
+
 ### Unsigned review builds
 
-The initial data-source catalog-review build is unsigned. Use it only in a controlled self-managed development/review environment that explicitly permits `digitalrcs-intelligencegateway-datasource`. If using an unsigned panel build too, permit `digitalrcs-intelligencegateway-panel` as well. Do not disable signature verification globally or assume unsigned archives are installable in Grafana Cloud. Follow the applicable signed-release and deployment requirements for production.
+An archive prepared for initial catalog review may be unsigned until Grafana grants a public signature level. Check the exact release's validation record rather than assuming its signature status. Use an unsigned archive only in a controlled self-managed development/review environment that explicitly permits `digitalrcs-intelligencegateway-datasource`. If using an unsigned panel build too, permit `digitalrcs-intelligencegateway-panel` as well. Do not disable signature verification globally or assume unsigned archives are installable in Grafana Cloud. Follow the applicable signed-release and deployment requirements for production.
 
-## Credential-free reviewer environment
+## Phase 1: credential-free mock connection check
+
+> **DEMO ONLY - Mock AI (no inference)** returns a fixed delivery receipt. No AI model runs in the supplied demo, and the receipt does not understand or assess query data or images. No cloud credentials or hosted AI access are shipped. The mock is only a transport/rendering check, not an inference test.
 
 Clone the repository and run:
 
@@ -57,9 +65,27 @@ mage -v build:linux
 docker compose up --build
 ```
 
-Open <http://localhost:3000>, sign in with `admin` / `admin`, and open **Dashboards > Intelligence Gateway Data Source Review**. The stack provisions a deterministic local provider and never requires a real provider key. Set `GRAFANA_PORT` before startup if port 3000 is unavailable.
+Open <http://localhost:3000>, sign in with `admin` / `admin`, and open **Dashboards > Intelligence Gateway Data Source Review**. The stack provisions **DEMO ONLY - Mock AI (no inference)** without a real provider key. Its settings show the demo warning and real-provider checklist. Select **Save & test**, then run the supplied query to see the labeled mock receipt. Set `GRAFANA_PORT` before startup if port 3000 is unavailable.
 
-For production use, continue with [Configuration](Configuration), [Security and Secrets](Security-and-Secrets), and [Panel Integration](Panel-Integration).
+Keep this mock instance configured for repeatable tests. Do not replace it with a private provider or add real credentials to the mock.
+
+## Phase 2: real assessment with your own provider
+
+Genuine inference requires an approved reachable provider, a compatible model/agent, and any required credential. For catalog review, use an existing approved provider or coordinate suitable limited test API access privately with DigitalRCS through the existing Grafana review conversation before Phase 2. No hosted service or credentials are currently bundled or promised; any access must be arranged and confirmed separately. Never publish credentials or private endpoint details, and do not count the mock check as completed real-provider review.
+
+Local LM Studio may be configured without authentication; hosted providers normally require an authorized account and credential. Confirm model availability, retention policy, and any usage limits or costs for the selected test connection.
+
+1. In **Connections → Data sources → Add new data source**, add a **separate Intelligence Gateway Secure AI** instance. Give it a descriptive name such as `Operations AI` and leave the mock instance unchanged.
+2. Select the real provider and enter its **Base URL** as reached from the **Grafana server/container**, not the browser. For LM Studio on a Docker Desktop host, use `http://host.docker.internal:1234/v1` when its server accepts connections from Docker. For a remote host, use an address reachable from the container. `localhost` in a container points back to that container; it is not your desktop. See [Configuration](Configuration) for each provider's path.
+3. Enter the exact **Default model** and include it in **Allowed models**. Verify it is available on that provider. Store the API key, bearer token, or Direct Line secret in the appropriate secure field only. Leave credentials blank only when the provider intentionally does not require them. Prefer HTTPS; permit HTTP only for an approved trusted-network connection.
+4. Set a supported timeout and output budget, then select **Save & test**. This checks connectivity/model access or Direct Line token exchange; it does not run inference or prove image understanding.
+5. For image assessment, enable **Enable image analysis** and list a verified image-capable model in **Allowed vision models**. It must also be allowed by the model policy. Text-only compatibility is not sufficient.
+6. Edit the Intelligence Gateway panel and select the **new real instance** under **AI provider → Secure AI data source**. Load permitted models and choose the intended one. Do not put this AI connection in **Queries** when analyzing another panel: **Queries** must still select the metric/table source, such as **Dashboard** plus the source chart.
+7. Run **Analyze** with synthetic query data, or preview synthetic images and explicitly select **Analyze images**. Check that the result assesses the supplied evidence rather than displaying a mock receipt. Test image-only inference separately from combined images and query data.
+
+The mock notice is a fixture notice, not an inference detector or security control: it requires the supplied `reviewMock: true` marker, Custom provider, and the exact mock base URL (ignoring surrounding whitespace and trailing slashes). Changing the provider or URL removes it; there is no editable mock toggle. The backend transport and authentication are unchanged.
+
+Continue with [Configuration](Configuration), [Security and Secrets](Security-and-Secrets), and [Panel Integration](Panel-Integration) before production use.
 
 ## If the panel cannot find the data source
 

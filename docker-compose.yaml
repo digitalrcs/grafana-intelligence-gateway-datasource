@@ -3,6 +3,11 @@ services:
     extends:
       file: .config/docker-compose-base.yaml
       service: grafana
+    build:
+      dockerfile: ${GRAFANA_DOCKERFILE:-../Dockerfile.review}
+    environment:
+      NODE_ENV: production
+      GF_DEFAULT_APP_MODE: ${GRAFANA_APP_MODE:-production}
     ports: !override
       - '${GRAFANA_PORT:-3000}:3000'
     depends_on:

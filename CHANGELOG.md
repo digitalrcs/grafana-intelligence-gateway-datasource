@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.1.0 - 2026-10-26
+
+- Clearly label the provisioned demo instance and show a mock warning with separate real-provider setup instructions. The fixture marker does not change backend request or credential policies.
+- Added administrator-controlled image analysis, disabled by default, with explicit vision-model approval and strict PNG/JPEG, payload, dimension, pixel, rate, and concurrency limits.
+- Added a local capabilities endpoint for companion panels and typed, validated image attachments without accepting remote image URLs or exposing provider credentials.
+- Added Open WebUI and Grafana LLM app provider profiles. Grafana LLM uses a securely stored service-account token and the app's `base`/`large` aliases.
+- Added a preview Copilot Studio Direct Line profile using a securely stored channel secret, approved public regional endpoints, and a fail-closed correlated completion contract. It does not implement end-user SSO or enforce model generation controls.
+- Added non-cacheable, JSON-only resource responses and sanitized image, payload, provider, and timeout errors.
+- Updated configuration, image privacy, provider, troubleshooting, and companion-panel documentation.
+- Hold concurrency slots until upstream response bodies are closed, including slow query and model-discovery responses.
+- Patch the development signing dependency and host-external Moment dependency; retain the documented moderate React Router advisory assessment.
+- Update the backend to Go 1.26.10 and x/net 0.60.0 to remediate newly reported reachable standard-library and HTTP/2 vulnerabilities.
+
 ## 1.0.1 - 2026-09-27
 
 - Reworked the packaged catalog overview around the Intelligence Gateway companion workflow, with real assessment imagery and documentation/support links.

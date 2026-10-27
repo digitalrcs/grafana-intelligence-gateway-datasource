@@ -1,6 +1,6 @@
 import { DataQuery, DataSourceJsonData } from '@grafana/schema';
 
-export type Provider = 'openai' | 'lmstudio' | 'custom';
+export type Provider = 'openai' | 'lmstudio' | 'openwebui' | 'grafana-llm' | 'copilot-studio' | 'custom';
 
 export interface IntelligenceGatewayQuery extends DataQuery {
   systemPrompt?: string;
@@ -22,15 +22,22 @@ export interface IntelligenceGatewayDataSourceOptions extends DataSourceJsonData
   allowedModels?: string[];
   maxOutputTokens?: number;
   allowInsecureHttp?: boolean;
+  enableVision?: boolean;
+  allowedVisionModels?: string[];
+  /** Non-secret notice marker for the supplied mock fixture; never changes provider transport. */
+  reviewMock?: boolean;
 }
 
 /** Values are written on save and never returned to browser code. */
 export interface IntelligenceGatewaySecureJsonData {
   apiKey?: string;
   bearerToken?: string;
+  directLineSecret?: string;
 }
 
-export const DEFAULT_CONFIG: Required<Omit<IntelligenceGatewayDataSourceOptions, keyof DataSourceJsonData>> = {
+export const DEFAULT_CONFIG: Required<
+  Omit<IntelligenceGatewayDataSourceOptions, keyof DataSourceJsonData | 'reviewMock'>
+> = {
   provider: 'openai',
   baseUrl: 'https://api.openai.com/v1',
   defaultModel: 'gpt-4.1-mini',
@@ -38,4 +45,6 @@ export const DEFAULT_CONFIG: Required<Omit<IntelligenceGatewayDataSourceOptions,
   allowedModels: ['gpt-4.1-mini'],
   maxOutputTokens: 256000,
   allowInsecureHttp: false,
+  enableVision: false,
+  allowedVisionModels: [],
 };
