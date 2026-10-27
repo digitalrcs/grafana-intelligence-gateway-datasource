@@ -23,11 +23,13 @@ Open <http://localhost:3000>, sign in with `admin` / `admin`, and verify:
 
 The mock provider is isolated to Docker Compose, accepts no credential, logs no request content, and produces a deterministic response. It exists so reviewers do not need DigitalRCS or OpenAI secrets.
 
-## Phase 2: real-provider assessment (your provider)
+## Phase 2: real-provider assessment
 
 For an end-to-end operational use case, follow the [traffic-shift reviewer walkthrough](https://github.com/digitalrcs/grafana-intelligence-gateway/wiki/Reviewer-Walkthrough). It explains the two plugins' responsibilities, supplies synthetic DC1/DC2 request rates, and shows how to connect LM Studio and check that the response changes with the input. The default mock proves connectivity and rendering only, not inference quality.
 
-Keep the mock instance configured; create a **separate Intelligence Gateway Secure AI** instance using the [own-provider checklist](Installation-and-Quick-Start#phase-2-real-assessment-with-your-own-provider). Supply your own reachable provider URL, compatible model, and secure credential if required, then **Save & test**. Select this new instance under the panel's **AI provider → Secure AI data source**, not **Queries**. For images, explicitly enable image analysis and approve an image-capable model.
+Use an existing approved provider, or coordinate suitable limited test API access privately with DigitalRCS through the existing Grafana review conversation before this phase. No hosted service or credentials are currently bundled or promised; any access must be arranged and confirmed separately. Do not publish credentials or private endpoint details. The mock check alone does not complete real-provider review.
+
+Keep the mock instance configured; create a **separate Intelligence Gateway Secure AI** instance using the [provider checklist](Installation-and-Quick-Start#phase-2-real-assessment-with-your-own-provider). Configure the agreed reachable provider URL, compatible model, and secure credential if required, then **Save & test**. Select this new instance under the panel's **AI provider → Secure AI data source**, not **Queries**. For images, explicitly enable image analysis and approve an image-capable model.
 
 URLs are reached from the Grafana server/container. LM Studio on the Docker Desktop host can use `http://host.docker.internal:1234/v1` if its server accepts that connection; a remote provider needs its reachable network address. `localhost` is not the Docker host. Hosted access and credentials are not bundled with the demo.
 

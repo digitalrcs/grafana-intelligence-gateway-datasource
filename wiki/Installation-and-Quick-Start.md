@@ -71,7 +71,9 @@ Keep this mock instance configured for repeatable tests. Do not replace it with 
 
 ## Phase 2: real assessment with your own provider
 
-Genuine inference requires a provider you can access, a compatible model/agent, and any required credential. Local LM Studio may be configured without authentication; hosted providers typically require your own account and credential. Access, model availability, retention policy, and usage costs are not supplied by this plugin.
+Genuine inference requires an approved reachable provider, a compatible model/agent, and any required credential. For catalog review, use an existing approved provider or coordinate suitable limited test API access privately with DigitalRCS through the existing Grafana review conversation before Phase 2. No hosted service or credentials are currently bundled or promised; any access must be arranged and confirmed separately. Never publish credentials or private endpoint details, and do not count the mock check as completed real-provider review.
+
+Local LM Studio may be configured without authentication; hosted providers normally require an authorized account and credential. Confirm model availability, retention policy, and any usage limits or costs for the selected test connection.
 
 1. In **Connections → Data sources → Add new data source**, add a **separate Intelligence Gateway Secure AI** instance. Give it a descriptive name such as `Operations AI` and leave the mock instance unchanged.
 2. Select the real provider and enter its **Base URL** as reached from the **Grafana server/container**, not the browser. For LM Studio on a Docker Desktop host, use `http://host.docker.internal:1234/v1` when its server accepts connections from Docker. For a remote host, use an address reachable from the container. `localhost` in a container points back to that container; it is not your desktop. See [Configuration](Configuration) for each provider's path.
