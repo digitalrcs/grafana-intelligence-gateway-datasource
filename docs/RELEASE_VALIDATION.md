@@ -1,41 +1,44 @@
-# 1.0.1 release validation
+# 1.1.0 release validation
 
-This maintenance release reconciles the backend-hardening work with the packaged catalog overview. It does not represent Grafana approval, certification, or a published catalog listing.
+This record separates local preflight, GitHub CI, the exact released archive, and Grafana's own approval. The [submission handoff](GRAFANA_SUBMISSION.md) contains the version-matched fields. No catalog approval or public signature is implied.
 
-## Security dependency assessment — September 27, 2026
+## Dependency assessment — October 26, 2026
 
-The npm lockfile has no high or critical findings after aligning the Grafana packages to 13.1.1 and patching DOMPurify, react-use/js-cookie, js-yaml, fast-uri, qs, and nanoid. React 18 is retained for compatibility.
+Both repositories now pin the development signing tool's `get-uri > basic-ftp` dependency to 6.2.1 and the host-external `@grafana/data > moment` dependency to 2.31.0. This removes the current high-severity FTP directory-list parser advisory and the Moment findings without adopting sign-plugin 4 (which requires a newer Node runtime). The narrow FTP override retains the Client API used by get-uri; the signing-tool dependency import is smoke-tested. No forced broad audit fix is used.
 
-Four moderate affected package entries remain in the inherited React Router dependency chain. They represent two advisories, not four separate vulnerabilities:
+The full npm audit reports **four moderate affected package entries, zero high, and zero critical**. The remaining React Router compatibility chain represents two advisories:
 
-- [GHSA-wrjc-x8rr-h8h6](https://github.com/remix-run/react-router/security/advisories/GHSA-wrjc-x8rr-h8h6): untrusted navigation paths can cause external redirects.
-- [GHSA-337j-9hxr-rhxg](https://github.com/remix-run/react-router/security/advisories/GHSA-337j-9hxr-rhxg): constructor injection in SSR error hydration.
+- [GHSA-wrjc-x8rr-h8h6](https://github.com/remix-run/react-router/security/advisories/GHSA-wrjc-x8rr-h8h6): external redirects from untrusted navigation paths.
+- [GHSA-337j-9hxr-rhxg](https://github.com/remix-run/react-router/security/advisories/GHSA-337j-9hxr-rhxg): SSR error-hydration constructor injection.
 
-The plugin does not import routing APIs, implement SSR hydration, or bundle these libraries. Grafana/React modules are supplied by the Grafana host. This is an assessment of the plugin archive, not a claim that every supported Grafana host is free of those issues: administrators must keep Grafana patched. Forcing Router 7 into the host's Router 6 compatibility package is not a safe maintenance fix. Reassess this finding when upgrading Grafana dependencies.
+The plugin does not import routing APIs or implement SSR hydration. Grafana and React are host-provided externals, not bundled router implementations. This is an archive-scope assessment, not a guarantee about Grafana hosts; administrators must keep Grafana patched. CI checks the full dependency graph at high severity and above, including development tools. The remaining findings are not suppressed.
 
-CI checks production npm advisories at high severity and above. Full npm audit still reports the documented moderate findings; no advisory suppression or forced breaking override is used.
+Other narrow lockfile updates include DOMPurify, zod, fast-uri, source-map-js, ip-address, postcss-selector-parser, and serialize-javascript. No model/provider credentials are required for the checks.
 
-The baseline Go scan found eight reachable vulnerabilities: six in the Go standard library and two in gRPC. The backend build moves from Go 1.26.5 to 1.26.8 and from Grafana's Go SDK 0.296.2 to 0.296.5, including gRPC 1.83.2. The module minimum and release workflow must stay aligned so published binaries use the patched toolchain.
+## Preflight and scope
 
-The final `govulncheck@v1.8.0 -show verbose ./pkg/...` scan reported **No vulnerabilities found** across all three production root packages, 69 modules, and the Go 1.26.8 standard library. `go mod verify` passed. CI repeats the pinned source scan. This is a dated scan result, not a guarantee about future advisories.
+The feature includes tests for input bounds, explicit preview/send behavior, image-only versus combined requests, image-model approval, invalid image data, capture naming, and desktop/narrow checkbox layout. The secure companion also tests Direct Line protocol handling, JSON-only responses, fail-fast concurrency, and response-body slot ownership.
 
-## Upgrade and behavior checks
+The initial fresh Go scan found 12 reachable vulnerabilities in the prior Go 1.26.8 toolchain and x/net 0.59.0. The release updates to **Go 1.26.10** and **golang.org/x/net 0.60.0**, retaining Grafana Go SDK 0.296.5. The patched `govulncheck@v1.8.0 ./pkg/...` scan reports **No vulnerabilities found**. This is a dated scan result, not a guarantee about future advisories.
 
-- An empty model allow-list permits only the default model; a nonempty list must include it.
-- Model discovery returns approved IDs only, with no upstream model metadata or headers.
-- OAuth client-secret and streaming controls are removed. Legacy values are ignored; streaming is rejected even with a legacy enabling value.
-- The explicit insecure-HTTP override remains supported, defaults off, and displays its transport warning.
-- The provider selector uses a three-option radio group. Changing the previous dropdown to Custom reproduced a render-loop crash on Grafana 13.0.9; all seven browser checks passed on that version with the replacement, including Save & test with the HTTP override.
-- API key/bearer credentials remain in Grafana secure settings. Mock receipts remain explicitly labeled as not AI inference.
+Full native Go tests, Go vet, and repeated slow-body concurrency regressions passed before the toolchain patch. The complete patched-toolchain build/test/scan gate runs in CI, including race-enabled Mage tests. Check those results on the release commit.
 
-See [Configuration](../wiki/Configuration.md#upgrading-from-100) before upgrading an instance that used an unrestricted empty model list.
+Local build/unit checks are complemented by CI on released Grafana versions. Read the [Actions results](https://github.com/digitalrcs/grafana-intelligence-gateway-datasource/actions) for the exact release commit and tested matrix; do not infer a minimum-version test from plugin metadata. Native Windows uses Node 26, which exceeds plugin-e2e's supported Node range; CI uses Node 22 and is the clean-install browser gate.
 
-## Release verification
+The isolated Grafana 13.1.1 review environment previously verified capture/preview, explicit send, clear/remove, data-only inference, and checkbox wrapping at desktop and narrow widths. The current user's live LM Studio instance is not used for automatic mock tests or overwritten during release preparation. CI uses only synthetic data and the deterministic mock.
 
-Local preflight passed TypeScript checking, ESLint, the production webpack build, 14 packaging unit tests, 22 top-level Go tests with race detection (plus table cases), and the Mage Linux build. Jest reports no frontend unit tests; browser coverage uses Grafana's plugin-e2e suite instead. The companion panel's seven browser checks passed against this data-source build on Grafana 13.1.3, including the explicitly labeled mock assessment. No new real-provider inference is claimed by those checks.
+## Real-provider limitations
 
-The updated configuration screenshot was captured from the credential-free Docker instance on Grafana 13.1.3. It shows the current controls and HTTP warning without secrets. The local development host emitted unrelated live-reload connection and Grafana Assistant feature-flag errors; no plugin runtime exception was observed. The production source map confirms only plugin code and host-external Grafana/React modules.
+A real LM Studio text-only assessment of synthetic traffic completed in the local test environment after increasing the output budget. That does not prove image understanding. Mock vision tests verify transport/policy/UI, not real inference quality. Live image-understanding tests for all providers, Grafana LLM app deployments, and Copilot Studio tenants are not claimed. Copilot remains a bounded Direct Line preview, without delegated enterprise SSO.
 
-The release workflow builds all supported backend targets, packages the catalog README/assets, and produces the ZIP, SHA1 asset, and GitHub build provenance. Validate the exact downloadable archive and source tag before submitting it to Grafana. An initial-review unsigned warning is expected until Grafana grants a public signature level; do not bypass signing checks for a production-signed release.
+Capture uses rendered dashboard content. Lazy panel loading or scheduled dashboard refresh may still query data; no universal zero-query guarantee is made. Review previews for omitted panels and sensitive content.
 
-The local preflight and final release results are recorded in the release pull request and GitHub release. Passing automated validation does not replace Grafana's manual review or coordinate publication of the companion panel dependency automatically.
+## Exact release archive gate
+
+The tagged Release workflow downloads its generated ZIP and SHA1 asset, verifies their agreement, verifies GitHub provenance against the repository, release workflow and exact tag commit, then runs the full default Grafana Plugin Validator Docker image with the matching source tag. It preserves the validator image digest and results as the `release-validation` Actions artifact.
+
+Before publishing/submitting, inspect that evidence for packaging, source, security, dependency, provenance, and signature findings. An expected unsigned-review warning is not permission to overlook other failures. AI-assisted validator reviews require a separately configured provider and are not represented as performed without one.
+
+Public-signing credentials are not configured. These archives are for review with an explicit plugin allow-list until Grafana assigns the signature level and a signed build is produced. Provenance and a Grafana signature are independent.
+
+Verify public download/checksum and asset contents again after publication. Record the exact public asset hashes in the submission handoff rather than guessing them before the release is built. GitHub Wiki publication is a separate repository push; committing `wiki/` alone is insufficient.

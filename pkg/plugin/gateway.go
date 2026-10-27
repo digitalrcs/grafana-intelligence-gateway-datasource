@@ -34,21 +34,22 @@ type chatMessage struct {
 }
 
 type gatewayRequest struct {
-	Prompt          *prompt       `json:"prompt,omitempty"`
-	Messages        []chatMessage `json:"messages,omitempty"`
-	Model           string        `json:"model,omitempty"`
-	Temperature     *float64      `json:"temperature,omitempty"`
-	MaxOutputTokens *int          `json:"maxOutputTokens,omitempty"`
-	MaxTokens       *int          `json:"max_tokens,omitempty"`
-	Stream          bool          `json:"stream,omitempty"`
+	Prompt          *prompt           `json:"prompt,omitempty"`
+	Messages        []chatMessage     `json:"messages,omitempty"`
+	Images          []imageAttachment `json:"images,omitempty"`
+	Model           string            `json:"model,omitempty"`
+	Temperature     *float64          `json:"temperature,omitempty"`
+	MaxOutputTokens *int              `json:"maxOutputTokens,omitempty"`
+	MaxTokens       *int              `json:"max_tokens,omitempty"`
+	Stream          bool              `json:"stream,omitempty"`
 }
 
 type providerRequest struct {
-	Model       string        `json:"model"`
-	Messages    []chatMessage `json:"messages"`
-	Temperature *float64      `json:"temperature,omitempty"`
-	MaxTokens   int           `json:"max_tokens"`
-	Stream      bool          `json:"stream"`
+	Model       string            `json:"model"`
+	Messages    []providerMessage `json:"messages"`
+	Temperature *float64          `json:"temperature,omitempty"`
+	MaxTokens   int               `json:"max_tokens"`
+	Stream      bool              `json:"stream"`
 }
 
 type gateway struct {
@@ -137,7 +138,7 @@ func validateHost(ctx context.Context, target *url.URL, provider string, allowIn
 		if ip.IsUnspecified() || ip.IsMulticast() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() {
 			return errors.New("provider host resolves to a prohibited network address")
 		}
-		if provider == "openai" && (ip.IsLoopback() || ip.IsPrivate()) {
+		if (provider == "openai" || provider == "copilot-studio") && (ip.IsLoopback() || ip.IsPrivate()) {
 			return errors.New("remote provider host must not resolve to a loopback or private address")
 		}
 	}
@@ -151,24 +152,60 @@ func (g *gateway) close() {
 }
 
 func (g *gateway) acquire(ctx context.Context) error {
+	if err := ctx.Err(); err != nil {
+		return providerConnectionError(err)
+	}
 	if !g.rate.allow(time.Now()) {
 		return &gatewayError{status: http.StatusTooManyRequests, message: "data source request rate limit exceeded"}
 	}
 	select {
 	case g.concurrent <- struct{}{}:
 		return nil
-	case <-ctx.Done():
-		return ctx.Err()
+	default:
+		// Do not queue large request bodies retained by the resource adapter.
+		return &gatewayError{status: http.StatusTooManyRequests, message: "data source is busy; retry later"}
 	}
 }
 
 func (g *gateway) release() { <-g.concurrent }
 
+// A successful HTTP request is still active after its headers arrive. Keep its
+// slot through bounded body reads, and release exactly once when the caller
+// closes the body (including after a read error or cancellation).
+type slotResponseBody struct {
+	io.ReadCloser
+	release  func()
+	once     sync.Once
+	closeErr error
+}
+
+func (body *slotResponseBody) Close() error {
+	body.once.Do(func() {
+		defer body.release()
+		body.closeErr = body.ReadCloser.Close()
+	})
+	return body.closeErr
+}
+
+func (g *gateway) retainResponseSlot(response *http.Response, err error) (*http.Response, error) {
+	if err != nil {
+		g.release()
+		return nil, err
+	}
+	response.Body = &slotResponseBody{ReadCloser: response.Body, release: g.release}
+	return response, nil
+}
+
 func (g *gateway) requestChat(ctx context.Context, request gatewayRequest) (*http.Response, error) {
 	if err := g.acquire(ctx); err != nil {
 		return nil, err
 	}
-	defer g.release()
+	return g.retainResponseSlot(g.requestChatWithSlot(ctx, request))
+}
+
+// Resource handlers acquire before reading image bodies, bounding both parsing
+// and image decoding concurrency. QueryData callers use requestChat above.
+func (g *gateway) requestChatWithSlot(ctx context.Context, request gatewayRequest) (*http.Response, error) {
 
 	model := strings.TrimSpace(request.Model)
 	if model == "" {
@@ -176,6 +213,26 @@ func (g *gateway) requestChat(ctx context.Context, request gatewayRequest) (*htt
 	}
 	if !g.settings.ModelAllowed(model) {
 		return nil, &gatewayError{status: http.StatusBadRequest, message: "requested model is not allowed by the administrator"}
+	}
+	if g.settings.Provider == "grafana-llm" && model != "base" && model != "large" {
+		return nil, &gatewayError{status: http.StatusBadRequest, message: "Grafana LLM requires the base or large model alias"}
+	}
+	if len(request.Images) > 0 {
+		if !g.settings.EnableVision {
+			return nil, &gatewayError{status: http.StatusBadRequest, message: "image analysis is disabled by the data-source administrator"}
+		}
+		if !g.settings.VisionModelAllowed(model) {
+			return nil, &gatewayError{status: http.StatusBadRequest, message: "requested model is not approved for image analysis; select an administrator-approved vision model"}
+		}
+	}
+	textRequest := request
+	textRequest.Images = nil
+	textBody, err := json.Marshal(textRequest)
+	if err != nil {
+		return nil, &gatewayError{status: http.StatusBadRequest, message: "invalid request values"}
+	}
+	if len(textBody) > maxRequestBytes {
+		return nil, &gatewayError{status: http.StatusRequestEntityTooLarge, message: "text content exceeds the 1 MiB limit"}
 	}
 	if request.Stream {
 		return nil, &gatewayError{status: http.StatusBadRequest, message: "streaming is not supported; use a buffered request"}
@@ -201,6 +258,10 @@ func (g *gateway) requestChat(ctx context.Context, request gatewayRequest) (*htt
 			return nil, &gatewayError{status: http.StatusBadRequest, message: "message content must not be empty"}
 		}
 	}
+	providerMessages, err := buildProviderMessages(messages, request.Images)
+	if err != nil {
+		return nil, err
+	}
 	cap := g.settings.MaxOutputTokens
 	requested := request.MaxOutputTokens
 	if requested == nil {
@@ -215,17 +276,22 @@ func (g *gateway) requestChat(ctx context.Context, request gatewayRequest) (*htt
 		}
 	}
 	body, err := json.Marshal(providerRequest{
-		Model: model, Messages: messages, Temperature: request.Temperature, MaxTokens: cap, Stream: request.Stream,
+		Model: model, Messages: providerMessages, Temperature: request.Temperature, MaxTokens: cap, Stream: request.Stream,
 	})
 	if err != nil {
 		return nil, err
 	}
-	if len(body) > maxRequestBytes {
-		return nil, &gatewayError{status: http.StatusRequestEntityTooLarge, message: "request exceeds the 1 MiB limit"}
+	requestLimit := maxRequestBytes
+	if len(request.Images) > 0 {
+		requestLimit = maxVisionRequestBytes
 	}
-	endpoint := *g.baseURL
-	endpoint.Path = strings.TrimRight(endpoint.Path, "/") + "/chat/completions"
-	providerReq, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint.String(), bytes.NewReader(body))
+	if len(body) > requestLimit {
+		return nil, &gatewayError{status: http.StatusRequestEntityTooLarge, message: "encoded provider request exceeds its size limit (1 MiB text or 18 MiB with images)"}
+	}
+	if g.settings.Provider == "copilot-studio" {
+		return g.requestCopilot(ctx, model, messages, request.Images)
+	}
+	providerReq, err := http.NewRequestWithContext(ctx, http.MethodPost, g.providerEndpoint("chat/completions"), bytes.NewReader(body))
 	if err != nil {
 		return nil, err
 	}
@@ -233,17 +299,23 @@ func (g *gateway) requestChat(ctx context.Context, request gatewayRequest) (*htt
 	providerReq.Header.Set("Accept", "application/json")
 	if token := g.settings.AuthorizationToken(); token != "" {
 		providerReq.Header.Set("Authorization", "Bearer "+token)
-	} else if g.settings.Provider == "openai" {
-		return nil, &gatewayError{status: http.StatusBadRequest, message: "an API key or bearer token is required for OpenAI"}
+	} else if err := g.missingCredentialError(); err != nil {
+		return nil, err
 	}
 	response, err := g.client.Do(providerReq)
 	if err != nil {
-		return nil, &gatewayError{status: http.StatusBadGateway, message: "provider request failed"}
+		return nil, providerConnectionError(err)
 	}
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
 		closeBody(response.Body)
 		message := fmt.Sprintf("provider returned HTTP %d", response.StatusCode)
 		switch response.StatusCode {
+		case http.StatusBadRequest, http.StatusUnprocessableEntity:
+			if len(request.Images) > 0 {
+				message = "provider rejected the image request; verify that the configured model supports images and its image limits are compatible"
+			}
+		case http.StatusRequestEntityTooLarge:
+			message = "provider rejected the request size; use fewer or smaller images and less text"
 		case http.StatusUnauthorized, http.StatusForbidden:
 			message = "provider authentication failed"
 		case http.StatusTooManyRequests:
@@ -258,20 +330,38 @@ func (g *gateway) requestModels(ctx context.Context) (*http.Response, error) {
 	if err := g.acquire(ctx); err != nil {
 		return nil, err
 	}
-	defer g.release()
-	endpoint := *g.baseURL
-	endpoint.Path = strings.TrimRight(endpoint.Path, "/") + "/models"
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint.String(), nil)
+	return g.retainResponseSlot(g.requestModelsWithSlot(ctx))
+}
+
+func (g *gateway) requestModelsWithSlot(ctx context.Context) (*http.Response, error) {
+	if g.settings.Provider == "copilot-studio" {
+		modelIDs := g.settings.AllowedModels
+		if len(modelIDs) == 0 {
+			modelIDs = []string{g.settings.DefaultModel}
+		}
+		entries := make([]map[string]string, 0, len(modelIDs))
+		for _, id := range modelIDs {
+			entries = append(entries, map[string]string{"id": id, "object": "model"})
+		}
+		body, err := json.Marshal(map[string]any{"object": "list", "data": entries})
+		if err != nil {
+			return nil, err
+		}
+		return &http.Response{StatusCode: http.StatusOK, Header: http.Header{"Content-Type": []string{"application/json"}}, Body: io.NopCloser(bytes.NewReader(body))}, nil
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, g.providerEndpoint("models"), nil)
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Set("Accept", "application/json")
 	if token := g.settings.AuthorizationToken(); token != "" {
 		req.Header.Set("Authorization", "Bearer "+token)
+	} else if err := g.missingCredentialError(); err != nil {
+		return nil, err
 	}
 	response, err := g.client.Do(req)
 	if err != nil {
-		return nil, &gatewayError{status: http.StatusBadGateway, message: "provider connection failed"}
+		return nil, providerConnectionError(err)
 	}
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
 		closeBody(response.Body)
@@ -280,10 +370,42 @@ func (g *gateway) requestModels(ctx context.Context) (*http.Response, error) {
 	return response, nil
 }
 
+func (g *gateway) providerEndpoint(resource string) string {
+	endpoint := *g.baseURL
+	endpoint.Path = strings.TrimRight(endpoint.Path, "/")
+	if g.settings.Provider == "openwebui" && !strings.HasSuffix(endpoint.Path, "/api") {
+		endpoint.Path += "/api"
+	}
+	endpoint.Path += "/" + resource
+	return endpoint.String()
+}
+
+func (g *gateway) missingCredentialError() error {
+	switch g.settings.Provider {
+	case "openai":
+		return &gatewayError{status: http.StatusBadRequest, message: "an API key or bearer token is required for OpenAI"}
+	case "grafana-llm":
+		return &gatewayError{status: http.StatusBadRequest, message: "Grafana LLM requires a Grafana service-account bearer token in the data source"}
+	default:
+		return nil
+	}
+}
+
+func providerConnectionError(err error) error {
+	var networkError net.Error
+	if errors.Is(err, context.DeadlineExceeded) || (errors.As(err, &networkError) && networkError.Timeout()) {
+		return &gatewayError{status: http.StatusGatewayTimeout, message: "provider response timed out; reduce the input size or review the data-source and provider timeouts"}
+	}
+	if errors.Is(err, context.Canceled) {
+		return &gatewayError{status: http.StatusRequestTimeout, message: "provider request was cancelled"}
+	}
+	return &gatewayError{status: http.StatusBadGateway, message: "provider request failed"}
+}
+
 func readBounded(body io.Reader) ([]byte, error) {
 	content, err := io.ReadAll(io.LimitReader(body, maxResponseBytes+1))
 	if err != nil {
-		return nil, err
+		return nil, providerConnectionError(err)
 	}
 	if len(content) > maxResponseBytes {
 		return nil, &gatewayError{status: http.StatusBadGateway, message: "provider response exceeded the 16 MiB limit"}

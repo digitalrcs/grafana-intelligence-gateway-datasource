@@ -26,6 +26,9 @@ type Props = DataSourcePluginOptionsEditorProps<
 const providerOptions: Array<SelectableValue<Provider>> = [
   { label: 'OpenAI', value: 'openai', description: 'OpenAI API' },
   { label: 'LM Studio', value: 'lmstudio', description: 'Local OpenAI-compatible server' },
+  { label: 'Open WebUI', value: 'openwebui', description: 'Open WebUI API' },
+  { label: 'Grafana LLM', value: 'grafana-llm', description: 'Configured Grafana LLM app' },
+  { label: 'Copilot Studio', value: 'copilot-studio', description: 'Approved Direct Line channel' },
   { label: 'Custom', value: 'custom', description: 'Remote OpenAI-compatible API' },
 ];
 
@@ -67,6 +70,30 @@ export function ConfigEditor({ options, onOptionsChange }: Props) {
             onChange={(provider) => updateJson('provider', provider)}
           />
         </InlineField>
+        {jsonData.provider === 'openwebui' ? (
+          <Alert title="Open WebUI connection" severity="info">
+            Enter the Open WebUI root URL or its /api URL, including any deployment subpath. The backend uses
+            /api/models and /api/chat/completions. Store the Open WebUI API key or bearer token below.
+          </Alert>
+        ) : null}
+        {jsonData.provider === 'grafana-llm' ? (
+          <Alert title="Grafana LLM app connection" severity="info">
+            Requires the configured grafana-llm-app on Grafana 13 or later. Use a Base URL ending in
+            /api/plugins/grafana-llm-app/resources/llm/v1, including any Grafana subpath. Set the model to base or
+            large. Store a Grafana service-account token with access to the LLM app in Bearer token. Requests run as
+            that service account. The app&apos;s own two-minute provider timeout also applies.
+          </Alert>
+        ) : null}
+        {jsonData.provider === 'copilot-studio' ? (
+          <Alert title="Copilot Studio Direct Line connection" severity="info">
+            Use an approved published agent&apos;s Direct Line channel secret and HTTPS base URL ending in
+            /v3/directline. Default model and allowed models are local agent aliases, not selectable underlying models.
+            Temperature and output-token settings are controlled by the agent and do not apply to Direct Line. This
+            connection does not perform interactive end-user sign-in or enterprise SSO; agents requesting sign-in return
+            an explicit unsupported authentication error. This preview adapter requires correlated text replies and a
+            completion signal. Enable file uploads in the agent before approving it for image analysis.
+          </Alert>
+        ) : null}
         <InlineField
           label="Base URL"
           labelWidth={24}
@@ -98,7 +125,11 @@ export function ConfigEditor({ options, onOptionsChange }: Props) {
             network you trust.
           </Alert>
         ) : null}
-        <InlineField label="Default model" labelWidth={24} required>
+        <InlineField
+          label={jsonData.provider === 'copilot-studio' ? 'Default agent alias' : 'Default model'}
+          labelWidth={24}
+          required
+        >
           <Input
             id="config-default-model"
             width={40}
@@ -107,7 +138,7 @@ export function ConfigEditor({ options, onOptionsChange }: Props) {
           />
         </InlineField>
         <InlineField
-          label="Allowed models"
+          label={jsonData.provider === 'copilot-studio' ? 'Allowed agent aliases' : 'Allowed models'}
           labelWidth={24}
           tooltip="One model ID per line. Include the default model. When empty, only the default model is permitted."
         >
@@ -140,7 +171,12 @@ export function ConfigEditor({ options, onOptionsChange }: Props) {
             }
           />
         </InlineField>
-        <InlineField label="Maximum output tokens" labelWidth={24} required>
+        <InlineField
+          label="Maximum output tokens"
+          labelWidth={24}
+          required
+          disabled={jsonData.provider === 'copilot-studio'}
+        >
           <Input
             id="config-max-output-tokens"
             type="number"
@@ -155,23 +191,86 @@ export function ConfigEditor({ options, onOptionsChange }: Props) {
         </InlineField>
       </FieldSet>
 
+      <FieldSet label="Image analysis policy">
+        <InlineField
+          label="Enable image analysis"
+          labelWidth={24}
+          tooltip="Permit explicitly attached PNG/JPEG images to be sent to approved vision models. Disabled by default."
+        >
+          <Switch
+            id="config-enable-vision"
+            value={jsonData.enableVision}
+            onChange={(event) => updateJson('enableVision', event.currentTarget.checked)}
+          />
+        </InlineField>
+        {jsonData.enableVision ? (
+          <>
+            <InlineField
+              label="Allowed vision models"
+              labelWidth={24}
+              required
+              tooltip="One exact image-capable model ID per line. Every entry must also be allowed by the model policy. Capabilities are never inferred from model names."
+            >
+              <TextArea
+                id="config-allowed-vision-models"
+                rows={4}
+                cols={60}
+                value={(jsonData.allowedVisionModels ?? []).join('\n')}
+                onChange={(event: ChangeEvent<HTMLTextAreaElement>) =>
+                  updateJson(
+                    'allowedVisionModels',
+                    event.target.value
+                      .split('\n')
+                      .map((model) => model.trim())
+                      .filter(Boolean)
+                  )
+                }
+              />
+            </InlineField>
+            <Alert title="Image limits and data handling" severity="info">
+              Captured panels can contain sensitive visible information. Users preview and explicitly send images to the
+              selected provider. The backend permits up to 8 PNG/JPEG images, 4 MiB each and 12 MiB total, at most 4096
+              pixels per side, 16 million pixels per image and 32 million pixels total. Encoded requests are limited to
+              18 MiB; text remains limited to 1 MiB. Provider limits may be lower. Verify each allowed model supports
+              images; for Grafana LLM, verify the model behind the base or large alias.
+            </Alert>
+          </>
+        ) : null}
+      </FieldSet>
+
       <FieldSet label="Credentials">
-        <SecretField
-          id="config-api-key"
-          label="API key"
-          configured={Boolean(options.secureJsonFields.apiKey)}
-          value={options.secureJsonData?.apiKey}
-          onChange={(value) => updateSecret('apiKey', value)}
-          onReset={() => resetSecret('apiKey')}
-        />
-        <SecretField
-          id="config-bearer-token"
-          label="Bearer token"
-          configured={Boolean(options.secureJsonFields.bearerToken)}
-          value={options.secureJsonData?.bearerToken}
-          onChange={(value) => updateSecret('bearerToken', value)}
-          onReset={() => resetSecret('bearerToken')}
-        />
+        {jsonData.provider === 'copilot-studio' ? (
+          <SecretField
+            id="config-direct-line-secret"
+            label="Direct Line secret"
+            configured={Boolean(options.secureJsonFields.directLineSecret)}
+            value={options.secureJsonData?.directLineSecret}
+            onChange={(value) => updateSecret('directLineSecret', value)}
+            onReset={() => resetSecret('directLineSecret')}
+          />
+        ) : null}
+        {jsonData.provider !== 'copilot-studio' ? (
+          <>
+            {jsonData.provider !== 'grafana-llm' ? (
+              <SecretField
+                id="config-api-key"
+                label="API key"
+                configured={Boolean(options.secureJsonFields.apiKey)}
+                value={options.secureJsonData?.apiKey}
+                onChange={(value) => updateSecret('apiKey', value)}
+                onReset={() => resetSecret('apiKey')}
+              />
+            ) : null}
+            <SecretField
+              id="config-bearer-token"
+              label="Bearer token"
+              configured={Boolean(options.secureJsonFields.bearerToken)}
+              value={options.secureJsonData?.bearerToken}
+              onChange={(value) => updateSecret('bearerToken', value)}
+              onReset={() => resetSecret('bearerToken')}
+            />
+          </>
+        ) : null}
       </FieldSet>
     </Stack>
   );

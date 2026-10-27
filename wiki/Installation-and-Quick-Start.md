@@ -42,9 +42,15 @@ Do **not** place the data source inside the panel directory or combine both plug
 
 Installing either package does not create a data-source instance, supply a credential, or select it in existing dashboards. Grafana's installer can resolve declared plugin dependencies from its plugin repository, but the dependent package must be available there. During review, install both provided archives explicitly. The panel declares this data source as a required dependency; this data source does not declare a reverse dependency on the panel.
 
+### Upgrade the pair to 1.1.0
+
+For the full image workflow, install version 1.1.0 of both plugins. Back up the existing plugin directories and Grafana configuration, replace each complete package in its own directory, and restart Grafana. Verify the installed versions on the intended server and reload the whole browser page before testing; a dashboard query refresh does not reload plugin code. Existing data-source credentials and dashboard UIDs are not meant to be recreated during this upgrade.
+
+Image analysis is opt-in: existing text-only instances do not gain an image-model allow-list automatically. Enable it only after confirming the provider/model accepts images. Follow [Panel Integration](Panel-Integration) for data-only, images-only, and combined assessments, and [Release 1.1.0](Release-1.1.0) for validation boundaries. Do not treat the presence of a source branch or this guide as proof that a particular release ZIP has been published or approved.
+
 ### Unsigned review builds
 
-The initial data-source catalog-review build is unsigned. Use it only in a controlled self-managed development/review environment that explicitly permits `digitalrcs-intelligencegateway-datasource`. If using an unsigned panel build too, permit `digitalrcs-intelligencegateway-panel` as well. Do not disable signature verification globally or assume unsigned archives are installable in Grafana Cloud. Follow the applicable signed-release and deployment requirements for production.
+An archive prepared for initial catalog review may be unsigned until Grafana grants a public signature level. Check the exact release's validation record rather than assuming its signature status. Use an unsigned archive only in a controlled self-managed development/review environment that explicitly permits `digitalrcs-intelligencegateway-datasource`. If using an unsigned panel build too, permit `digitalrcs-intelligencegateway-panel` as well. Do not disable signature verification globally or assume unsigned archives are installable in Grafana Cloud. Follow the applicable signed-release and deployment requirements for production.
 
 ## Credential-free reviewer environment
 

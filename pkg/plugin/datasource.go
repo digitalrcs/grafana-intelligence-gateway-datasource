@@ -1,8 +1,10 @@
 package plugin
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -39,9 +41,13 @@ func NewDatasource(ctx context.Context, source backend.DataSourceInstanceSetting
 	ds := &Datasource{gateway: gateway}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /models", ds.handleModels)
+	mux.HandleFunc("GET /capabilities", ds.handleCapabilities)
 	mux.HandleFunc("POST /chat/completions", ds.handleChat)
 	mux.HandleFunc("POST /analyze", ds.handleChat)
-	ds.CallResourceHandler = httpadapter.New(mux)
+	ds.CallResourceHandler = httpadapter.New(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		setResourceHeaders(w)
+		mux.ServeHTTP(w, req)
+	}))
 	return ds, nil
 }
 
@@ -122,6 +128,12 @@ func extractAnswer(body []byte) (string, error) {
 func errorsForAnswer(message string) error { return fmt.Errorf("%s", message) }
 
 func (d *Datasource) CheckHealth(ctx context.Context, _ *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
+	if d.gateway.settings.Provider == "copilot-studio" {
+		if err := d.gateway.checkCopilotHealth(ctx); err != nil {
+			return &backend.CheckHealthResult{Status: backend.HealthStatusError, Message: err.Error()}, nil
+		}
+		return &backend.CheckHealthResult{Status: backend.HealthStatusOk, Message: "Direct Line credentials and connectivity are valid; agent inference and end-user SSO were not tested"}, nil
+	}
 	response, err := d.gateway.requestModels(ctx)
 	if err != nil {
 		return &backend.CheckHealthResult{Status: backend.HealthStatusError, Message: err.Error()}, nil
@@ -131,6 +143,7 @@ func (d *Datasource) CheckHealth(ctx context.Context, _ *backend.CheckHealthRequ
 }
 
 func (d *Datasource) handleModels(w http.ResponseWriter, req *http.Request) {
+	setResourceHeaders(w)
 	response, err := d.gateway.requestModels(req.Context())
 	if err != nil {
 		writeError(w, err)
@@ -199,9 +212,25 @@ func filterModelList(body []byte, settings *models.PluginSettings) ([]byte, erro
 }
 
 func (d *Datasource) handleChat(w http.ResponseWriter, req *http.Request) {
+	setResourceHeaders(w)
 	defer closeBody(req.Body)
-	req.Body = http.MaxBytesReader(w, req.Body, maxRequestBytes)
-	decoder := json.NewDecoder(req.Body)
+	if err := d.gateway.acquire(req.Context()); err != nil {
+		writeError(w, err)
+		return
+	}
+	defer d.gateway.release()
+	req.Body = http.MaxBytesReader(w, req.Body, maxVisionRequestBytes)
+	body, err := io.ReadAll(req.Body)
+	if err != nil {
+		var sizeError *http.MaxBytesError
+		if errors.As(err, &sizeError) {
+			writeJSONError(w, http.StatusRequestEntityTooLarge, "encoded request exceeds the 18 MiB limit")
+		} else {
+			writeJSONError(w, http.StatusBadRequest, "could not read request body")
+		}
+		return
+	}
+	decoder := json.NewDecoder(bytes.NewReader(body))
 	decoder.DisallowUnknownFields()
 	var request gatewayRequest
 	if err := decoder.Decode(&request); err != nil {
@@ -212,7 +241,11 @@ func (d *Datasource) handleChat(w http.ResponseWriter, req *http.Request) {
 		writeJSONError(w, http.StatusBadRequest, "request body must contain one JSON object")
 		return
 	}
-	response, err := d.gateway.requestChat(req.Context(), request)
+	if len(request.Images) == 0 && len(body) > maxRequestBytes {
+		writeJSONError(w, http.StatusRequestEntityTooLarge, "text request exceeds the 1 MiB limit")
+		return
+	}
+	response, err := d.gateway.requestChatWithSlot(req.Context(), request)
 	if err != nil {
 		writeError(w, err)
 		return
@@ -222,6 +255,7 @@ func (d *Datasource) handleChat(w http.ResponseWriter, req *http.Request) {
 }
 
 func copyResponse(w http.ResponseWriter, response *http.Response) {
+	setResourceHeaders(w)
 	contentType := response.Header.Get("Content-Type")
 	if strings.HasPrefix(strings.ToLower(contentType), "text/event-stream") {
 		writeJSONError(w, http.StatusBadGateway, "provider returned an unsupported streaming response")
@@ -232,10 +266,15 @@ func copyResponse(w http.ResponseWriter, response *http.Response) {
 		writeError(w, err)
 		return
 	}
-	if contentType == "" {
-		contentType = "application/json"
+	// Never serve provider HTML or another active document from a Grafana origin.
+	// Some compatible endpoints omit or mislabel the media type; accept their
+	// valid JSON object, but always return the safe, explicit JSON media type.
+	trimmed := bytes.TrimSpace(body)
+	if len(trimmed) == 0 || trimmed[0] != '{' || !json.Valid(body) {
+		writeJSONError(w, http.StatusBadGateway, "provider returned an invalid JSON response")
+		return
 	}
-	w.Header().Set("Content-Type", contentType)
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(body)
 }
@@ -244,7 +283,13 @@ func writeError(w http.ResponseWriter, err error) { writeJSONError(w, statusFor(
 
 func closeBody(body io.Closer) { _ = body.Close() }
 
+func setResourceHeaders(w http.ResponseWriter) {
+	w.Header().Set("Cache-Control", "no-store")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+}
+
 func writeJSONError(w http.ResponseWriter, status int, message string) {
+	setResourceHeaders(w)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(map[string]any{"error": map[string]string{"message": message}})

@@ -37,8 +37,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Check production dependencies for high severity advisories
-        run: npm audit --omit=dev --audit-level=high
+      - name: Check dependencies for high severity advisories
+        run: npm audit --audit-level=high
 
       - name: Check types
         run: npm run typecheck
@@ -156,6 +156,9 @@ jobs:
       - name: Resolve Grafana E2E versions
         id: resolve-versions
         uses: grafana/plugin-actions/e2e-version@e2e-version/v3.0.1
+        with:
+          # Gate releases on published versions, not unreleased nightly UI changes.
+          skip-grafana-nightly-image: true
 
   playwright-tests:
     needs: [resolve-versions, build]
@@ -214,7 +217,18 @@ jobs:
           docker logs digitalrcs-intelligencegateway-datasource >& grafana-server.log
 
       - name: Stop grafana docker
+        if: always()
         run: docker compose down
+
+      - name: Preserve synthetic browser-test evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: browser-tests-${{ matrix.GRAFANA_IMAGE.NAME }}-${{ matrix.GRAFANA_IMAGE.VERSION }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
 
       # Uncomment this step to upload the server log to Github artifacts. Remember Github artifacts are public on the Internet if the repository is public.
       # - name: Upload server log

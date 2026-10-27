@@ -4,7 +4,7 @@ The server-side AI connection for **Grafana Intelligence Gateway**.
 
 Intelligence Gateway Secure AI by **DigitalRCS** is purpose-built to accompany the [Grafana Intelligence Gateway panel](https://github.com/digitalrcs/grafana-intelligence-gateway). Configure your AI provider once, keep its credentials in Grafana's encrypted data-source settings, and let your Intelligence Gateway panels use that connection without storing provider keys in dashboards.
 
-Use local models through **LM Studio**, hosted models through **OpenAI**, or another provider with a compatible **Chat Completions API**. Administrators choose the endpoint, allowed models, and request limits; dashboard authors choose the data and question to analyze.
+Use local models through **LM Studio**, hosted models through **OpenAI**, **Open WebUI**, or another compatible **Chat Completions API**. Connect to a configured **Grafana LLM app**, or an approved published **Copilot Studio** agent through Direct Line. Administrators choose the connection, allowed models or agent aliases, and request limits; dashboard authors choose the data and question to analyze.
 
 ## Built for Intelligence Gateway
 
@@ -17,6 +17,12 @@ The two plugins work together but have different responsibilities:
 
 Together, they help operators compare traffic across sites, summarize an incident window, and prepare handovers with observations and follow-up checks. This data source is the AI connection, **not the source of the metrics being analyzed**. Keep using your existing metric, log, or table data sources for those queries.
 
+## Analyze data, images, or both
+
+Use the companion panel to assess **query data alone**, **images alone**, or **query data together with images**. Image inputs can be a rendered dashboard snapshot, selected rendered panels, or uploaded PNG/JPEG files. Preview and remove attachments before selecting **Analyze images**; automatic analysis never sends images.
+
+For an image-only assessment, turn off the panel's **Include query data with images** option. Keep it on to include the Intelligence Gateway panel's query results for exact numeric context. A screenshot does not automatically retrieve every pictured panel's underlying data, and image-only requests still include the configured prompt and non-secret dashboard context. The secure AI data-source instance is required in every mode.
+
 ![The companion Intelligence Gateway panel displaying a real local-model assessment of synthetic traffic data](https://raw.githubusercontent.com/digitalrcs/grafana-intelligence-gateway-datasource/main/src/img/intelligence-gateway-assessment.png)
 
 _Example of the two plugins working together: the panel presents a local LM Studio assessment of synthetic data; this data source provides the server-side model connection. The chart and assessment are panel content, not a visualization supplied by the data source._
@@ -26,14 +32,19 @@ _Example of the two plugins working together: the panel presents a local LM Stud
 - **A shared provider connection.** Reuse a configured instance across Intelligence Gateway panels, or create separate instances for different providers and teams.
 - **Server-side credentials.** Store the provider API key or bearer token in Grafana's secure fields. Saved credentials show configured/reset state rather than their stored values.
 - **Model selection.** Set a default model and an optional allow-list of models that panels may request. An empty list permits only the default model; model discovery shows only permitted IDs.
-- **Request limits.** Set a server-side timeout and output-token ceiling. A panel can request a lower output limit, but cannot raise the administrator ceiling.
+- **Image analysis.** Optionally allow previewed PNG/JPEG panel or dashboard captures, restricted to explicitly approved image-capable models. Image sending is disabled by default and follows strict count, size, and dimension limits.
+- **Request limits.** Set a server-side timeout and, for Chat Completions providers, an output-token ceiling. A panel cannot raise that ceiling. Copilot Studio response and generation policies are controlled by the agent.
 - **Transport policy.** Use HTTPS by default. An explicit **Allow insecure HTTP** override supports controlled HTTP-only environments, with the transport risks described below.
 
 The backend also limits request/response sizes and applies per-instance rate and concurrency controls. Provider billing limits remain important; output-token and request limits are not a monetary budget.
 
+Reasoning and visible output can share the model's token budget. If the model stops while reasoning, increase the panel budget within the administrator ceiling or select an appropriate model/configuration. Asking for a concise answer does not reserve tokens for that answer. Request timeouts are separate limits; extending the panel timeout cannot extend a shorter provider deadline.
+
 ## Requirements and installation
 
 Requires **Grafana 11.6 or later**, an AI provider reachable from the Grafana server, and the **Grafana Intelligence Gateway** panel for the intended dashboard experience. Provider access, available models, and any usage charges are managed separately.
+
+The optional Grafana LLM connection requires the configured `grafana-llm-app` on **Grafana 13 or later** and a service-account token with access to that app. The Copilot Studio preview connection requires an approved published agent, Direct Line channel secret, correlated text replies, and an explicit completion signal; it does not implement interactive end-user sign-in or enterprise SSO. See [provider setup](https://github.com/digitalrcs/grafana-intelligence-gateway-datasource/wiki/Configuration) for the supported routes and authentication boundaries.
 
 Install both plugins into the **same Grafana installation**. They are separate plugin packages, installed side by side in Grafana's configured plugins directory—not inside one another. A configured data-source instance must be available in the **same Grafana organization** as the dashboard.
 
@@ -42,21 +53,21 @@ See the [installation and plugin-placement guide](https://github.com/digitalrcs/
 ## Connect your first panel
 
 1. In **Connections → Data sources**, add **Intelligence Gateway Secure AI**.
-2. Choose **OpenAI**, **LM Studio**, or **Custom**. Enter the provider base URL, normally ending in `/v1`, and the exact default model ID. The URL must be reachable from the Grafana server or container, not just your browser.
-3. Enter an API key or bearer token only if your provider requires it. Set an allowed-model list that includes the default model, a timeout, and an output ceiling appropriate to the model and your budget.
-4. Select **Save & test**. This checks the provider's model endpoint; it does not generate an assessment or prove model quality.
-5. Add or edit a **Grafana Intelligence Gateway** panel. Under **Queries**, select the data to analyze—for example, **Dashboard** and an existing source panel.
-6. Under **AI provider → Secure AI data source**, select the instance you just configured. Choose **Load models securely**, select an allowed model, set the analysis instructions, and select **Analyze**.
+2. Choose the provider and enter its base URL and exact default model or agent alias. Chat Completions URLs commonly end in `/v1`; Open WebUI, Grafana LLM, and Copilot Studio have provider-specific paths shown in the configuration guide. The URL must be reachable from the Grafana server or container.
+3. Enter the required credential in its secure field. Set an allow-list that includes the default, a timeout, and supported generation limits. For images, separately enable **Enable image analysis** and fill **Allowed vision models** with verified image-capable models or the approved agent alias.
+4. Select **Save & test**. This checks the model endpoint, or exchanges a Direct Line channel token for Copilot Studio. It does not send an assessment prompt, test image understanding, or prove end-user authentication.
+5. Add or edit a **Grafana Intelligence Gateway** panel. For data-only or combined analysis, configure **Queries**—for example, select **Dashboard** and an existing source panel. Confirm the time range contains data.
+6. Under **AI provider → Secure AI data source**, select the instance you just configured. Choose **Load models securely**, select an allowed model, and set the analysis instructions. Select **Analyze** for data only, or **Images** to capture/upload, preview, and then explicitly **Analyze images**.
 
 Do not select this AI data source as the panel's metric source when your intention is to analyze another panel's data. The metric/query connection and the AI provider connection are separate. The [panel integration guide](https://github.com/digitalrcs/grafana-intelligence-gateway-datasource/wiki/Panel-Integration) explains both selectors.
 
 ## Security and compatibility
 
-Provider requests run on the Grafana server. Selected query data, prompts, and operational context are sent to the configured provider. Choose a local or hosted endpoint according to your organization's data-handling requirements, and restrict who can edit and query the data-source instance.
+Provider requests run on the Grafana server. Selected query data, prompts, operational context, and explicitly attached images are sent to the configured provider. Choose a local or hosted endpoint according to your organization's data-handling requirements, and restrict who can edit and query the data-source instance. Preview captures before sending: images can contain visible labels, annotations, or other sensitive information.
 
 Prefer HTTPS. **Allow insecure HTTP** disables the HTTPS requirement for that instance regardless of hostname or IP classification. Use it only with appropriate trusted-network and firewall controls: prompts, responses, and credentials can otherwise be intercepted in transit. It is not a way to bypass certificate validation for an HTTPS endpoint.
 
-Supported authentication is a provider API key or bearer token. OAuth client-credentials exchange and streaming are not supported. Responses are buffered. Custom providers and models must support the request format used by the gateway; OpenAI compatibility is not a guarantee that every model or feature is supported.
+Credentials use the provider's API key or bearer token, or a dedicated Direct Line channel secret for Copilot Studio. Grafana LLM calls run as the configured service account, not the dashboard viewer. OAuth client-credentials exchange, interactive end-user SSO, and streaming responses are not supported. Custom providers and models must support the request format used by the gateway; text compatibility does not establish image support.
 
 The query editor can also submit a supplied prompt and return an answer as a Grafana data frame, but it does not automatically collect other panels' data. Generated assessments require human verification and do not establish root cause or perform remediation.
 
