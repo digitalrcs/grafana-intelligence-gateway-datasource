@@ -42,7 +42,8 @@ test('labels only the supplied mock and clears its notice when the connection ch
   await expect(receiptNotice).toHaveCount(0);
   await page.getByRole('radio', { name: 'Custom', exact: true }).check({ force: true });
   await expect(receiptNotice).toBeVisible();
-  await page.getByRole('textbox', { name: 'Base URL', exact: true }).fill('https://ai.example.com/v1');
+  // Grafana includes the required-field marker in this input's accessible name.
+  await page.getByRole('textbox', { name: /^Base URL(?: \*)?$/ }).fill('https://ai.example.com/v1');
   await expect(receiptNotice).toHaveCount(0);
 });
 
