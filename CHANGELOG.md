@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.1 - 2026-10-30
+
+- Prepare the first public-signed release following Grafana's review, preserving the reviewed 1.1.0 functionality and dependency versions.
+- Require the signing token and public-signing gate before release builds, and a signed manifest in the exact release archive before publication.
+- Retain checksum, source-tag provenance, and full Grafana plugin validation. Existing unsigned 1.1.0 release artifacts remain unchanged.
+
 ## 1.1.0 - 2026-10-26
 
 - Clearly label the provisioned demo instance and show a mock warning with separate real-provider setup instructions. The fixture marker does not change backend request or credential policies.

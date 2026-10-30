@@ -21,13 +21,24 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Require public signing configuration
+        env:
+          PUBLIC_SIGNING_ENABLED: ${{ vars.GRAFANA_PUBLIC_SIGNING_ENABLED }}
+          GRAFANA_ACCESS_POLICY_TOKEN: ${{ secrets.GRAFANA_ACCESS_POLICY_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "$PUBLIC_SIGNING_ENABLED" != 'true' ] || [ -z "$GRAFANA_ACCESS_POLICY_TOKEN" ]; then
+            echo 'Public signing must be enabled and GRAFANA_ACCESS_POLICY_TOKEN must be configured.' >&2
+            exit 1
+          fi
+
       - uses: grafana/plugin-actions/build-plugin@build-plugin/v1.2.0
         with:
           node-version: '22'
           go-version: '1.26.10'
-          # An empty token produces the unsigned archive accepted for first review.
-          # Enable public signing only after Grafana grants a signature level.
-          policy_token: ${{ vars.GRAFANA_PUBLIC_SIGNING_ENABLED == 'true' && secrets.GRAFANA_ACCESS_POLICY_TOKEN || '' }}
+          # Grafana has approved public signing; unsigned release fallback is forbidden.
+          policy_token: ${{ secrets.GRAFANA_ACCESS_POLICY_TOKEN }}
           attestation: true
 
       - name: Verify the exact release archive and provenance
@@ -51,6 +62,10 @@ jobs:
           EXPECTED=$(awk '{print $1}' "$ARCHIVE.sha1")
           ACTUAL=$(sha1sum "$ARCHIVE" | awk '{print $1}')
           test "$EXPECTED" = "$ACTUAL"
+          unzip -p "$ARCHIVE" "$PLUGIN_ID/MANIFEST.txt" > MANIFEST.txt
+          test -s MANIFEST.txt
+          grep -qF -- '-----BEGIN PGP SIGNED MESSAGE-----' MANIFEST.txt
+          grep -qF -- '-----BEGIN PGP SIGNATURE-----' MANIFEST.txt
           gh attestation verify "$ARCHIVE" --repo "$GITHUB_REPOSITORY" \
             --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/release.yml" \
             --source-ref "refs/tags/$RELEASE_TAG" --source-digest "$GITHUB_SHA" 2>&1 | tee provenance.txt

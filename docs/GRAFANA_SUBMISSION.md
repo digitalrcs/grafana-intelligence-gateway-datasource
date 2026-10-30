@@ -57,6 +57,6 @@ The Release workflow verifies the downloaded artifact, source-tag provenance, ch
 
 The ZIP must contain one `digitalrcs-intelligencegateway-datasource/` root, version 1.1.0, production module, catalog README, changelog, license, and all referenced image assets. Verify backend binaries are included with portable executable permissions.
 
-These repositories currently have no public-signing token: the release is intended as an **unsigned review archive**. Build provenance is not a Grafana signature. Public installation without an unsigned allow-list requires Grafana's signature assignment and a properly signed build. Do not represent this as certified or catalog-approved.
+The 1.1.0 releases documented here are **unsigned initial-review archives**. Grafana subsequently requested signed builds of both plugins. The signing-only 1.1.1 release requires a signed manifest, exact-archive validation, and new checksums; use its published release details for the signing update, not the 1.1.0 values above. Build provenance is not a Grafana signature, and signing is not itself catalog publication.
 
 See [release notes](RELEASE_NOTES_1.1.0.md), [release validation](RELEASE_VALIDATION.md), and the [GitHub release](https://github.com/digitalrcs/grafana-intelligence-gateway-datasource/releases/tag/v1.1.0). Portal submission remains a separate administrator action.

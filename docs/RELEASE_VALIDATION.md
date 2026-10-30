@@ -1,6 +1,16 @@
-# 1.1.0 release validation
+# Release validation
 
-This record separates local preflight, GitHub CI, the exact released archive, and Grafana's own approval. The [submission handoff](GRAFANA_SUBMISSION.md) contains the version-matched fields. No catalog approval or public signature is implied.
+## 1.1.1 signing release — October 30, 2026
+
+Grafana has requested signed builds of both companion plugins. Version 1.1.1 changes release metadata and signing safeguards only; the reviewed 1.1.0 plugin behavior and dependency graph are unchanged. The release workflow requires the public-signing gate and token, checks for a signed manifest in the downloaded archive, and retains exact-archive provenance and full validator checks. Verify the actual signature classification and archive hashes before publication and submission; signing is not itself catalog publication.
+
+Grafana's recommended SDK HTTP-client integration and configuration-default persistence remain separate future work, explicitly non-blocking in the review. They are not included in this signing release.
+
+The October 30 full npm audit reports **five moderate and seven low affected package entries, zero high, and zero critical**. The production-only audit reports the same **four moderate React Router package entries** described below. The additional moderate [qs advisory](https://github.com/advisories/GHSA-6pq8-jhm2-2vcw) affects the development-only `tiny-lr` chain; the low [deepmerge advisory](https://github.com/advisories/GHSA-gcqx-w48m-w2h4) affects development test/type-check tooling. These tools are not shipped as plugin runtime implementations. Both high-severity audit gates pass; findings are not suppressed.
+
+The fresh Go 1.26.10 scan with `govulncheck@v1.8.0` reports **zero reachable vulnerabilities and zero vulnerable imported packages**. Two `golang.org/x/net/html` module-only advisories, [GO-2026-6866](https://pkg.go.dev/vuln/GO-2026-6866) and [GO-2026-6860](https://pkg.go.dev/vuln/GO-2026-6860), are neither imported nor called by this plugin. This is not a claim that the entire dependency graph is advisory-free. The October 26 results below remain dated historical evidence, not today's scan totals.
+
+The dated 1.1.0 validation record below remains historical evidence. The [1.1.0 submission handoff](GRAFANA_SUBMISSION.md) describes the older unsigned archives; use the new signed release's URLs and checksums for the signing update.
 
 ## Dependency assessment — October 26, 2026
 
@@ -41,6 +51,6 @@ The tagged Release workflow downloads its generated ZIP and SHA1 asset, verifies
 
 Before publishing/submitting, inspect that evidence for packaging, source, security, dependency, provenance, and signature findings. An expected unsigned-review warning is not permission to overlook other failures. AI-assisted validator reviews require a separately configured provider and are not represented as performed without one.
 
-Public-signing credentials are not configured. These archives are for review with an explicit plugin allow-list until Grafana assigns the signature level and a signed build is produced. Provenance and a Grafana signature are independent.
+The 1.1.0 archives were published unsigned for initial review. The 1.1.1 release requires public signing after Grafana's review; an unsigned archive is no longer an acceptable release result. Provenance and a Grafana signature are independent checks.
 
 Verify public download/checksum and asset contents again after publication. Record the exact public asset hashes in the submission handoff rather than guessing them before the release is built. GitHub Wiki publication is a separate repository push; committing `wiki/` alone is insufficient.
