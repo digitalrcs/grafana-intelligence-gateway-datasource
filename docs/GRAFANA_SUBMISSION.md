@@ -1,4 +1,17 @@
-# Grafana submission update — 1.1.0
+# Grafana submission updates
+
+## Security update 1.1.2 for ticket 240360
+
+Update only the existing **digitalrcs-intelligencegateway-datasource** submission to the signed 1.1.2 release after its archive verification completes. This replaces `golang.org/x/net` 0.60.0 with 0.62.0 and required transitive modules to address GO-2026-6860 and GO-2026-6866. The panel stays at its already-submitted signed **1.1.1** release.
+
+- Package: [data-source 1.1.2 ZIP](https://github.com/digitalrcs/grafana-intelligence-gateway-datasource/releases/download/v1.1.2/digitalrcs-intelligencegateway-datasource-1.1.2.zip).
+- Source: [immutable v1.1.2 source tag](https://github.com/digitalrcs/grafana-intelligence-gateway-datasource/tree/v1.1.2).
+- SHA1: copy the 40-character value from the [new checksum asset](https://github.com/digitalrcs/grafana-intelligence-gateway-datasource/releases/download/v1.1.2/digitalrcs-intelligencegateway-datasource-1.1.2.zip.sha1), and verify it against the downloaded ZIP. Never reuse the 1.1.1 checksum.
+- Evidence: [release notes and validation assets](https://github.com/digitalrcs/grafana-intelligence-gateway-datasource/releases/tag/v1.1.2). Check all six module-level binary scans and the full Grafana validator report, not just source reachability or a green workflow badge.
+
+Select **Submit Update** in My Plugins, then reply to the existing review ticket with the new version and verified release links. Preparing or publishing the package does not perform either portal action. Other fields remain Data source with backend, Single archive, provisioning provided, Apache-2.0, minimum Grafana 11.6.0.
+
+## Historical 1.1.0 initial review
 
 Use **Submit Update** on the existing plugin submission. Submit the secure data source first, then the panel; they are separate packages. The fields below target the 1.1.0 release. Confirm publication and the exact archive verification before entering them in Grafana. Preparing these fields does not update the portal or grant approval.
 

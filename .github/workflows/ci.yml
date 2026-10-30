@@ -90,6 +90,18 @@ jobs:
           version: latest
           args: test
 
+      - name: Check every backend binary for vulnerable modules
+        if: steps.check-for-backend.outputs.has-backend == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          for TARGET in linux_amd64 linux_arm linux_arm64 darwin_amd64 darwin_arm64 windows_amd64.exe; do
+            BINARY="dist/gpx_intelligencegateway_$TARGET"
+            test -s "$BINARY"
+            echo "Checking $BINARY"
+            go run golang.org/x/vuln/cmd/govulncheck@v1.8.0 -mode=binary -scan=module "$BINARY"
+          done
+
       - name: Check for E2E
         id: check-for-e2e
         run: |
