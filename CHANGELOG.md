@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.2 - 2026-10-30
+
+- Upgrade `golang.org/x/net` to 0.62.0, with its required transitive module updates, to address GO-2026-6860 and GO-2026-6866 reported in Grafana review ticket 240360.
+- Check every backend executable at module level before release so a dependency warning cannot be overlooked solely because source reachability analysis passes.
+- Preserve the existing provider behavior, configuration contract, Go toolchain, and Grafana SDK. The companion panel remains at 1.1.1; existing signed release artifacts are unchanged.
+
 ## 1.1.1 - 2026-10-30
 
 - Prepare the first public-signed release following Grafana's review, preserving the reviewed 1.1.0 functionality and dependency versions.

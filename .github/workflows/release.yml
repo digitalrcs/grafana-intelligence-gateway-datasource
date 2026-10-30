@@ -66,6 +66,15 @@ jobs:
           test -s MANIFEST.txt
           grep -qF -- '-----BEGIN PGP SIGNED MESSAGE-----' MANIFEST.txt
           grep -qF -- '-----BEGIN PGP SIGNATURE-----' MANIFEST.txt
+          # Scan the exact archive, including stripped binaries, at module precision.
+          # Text-mode govulncheck exits nonzero on findings; JSON mode does not.
+          unzip -q "$ARCHIVE" "$PLUGIN_ID/gpx_*" -d binary-scan
+          for TARGET in linux_amd64 linux_arm linux_arm64 darwin_amd64 darwin_arm64 windows_amd64.exe; do
+            BINARY="binary-scan/$PLUGIN_ID/gpx_intelligencegateway_$TARGET"
+            test -s "$BINARY"
+            echo "Checking $BINARY" | tee -a govulncheck-binaries.txt
+            go run golang.org/x/vuln/cmd/govulncheck@v1.8.0 -mode=binary -scan=module "$BINARY" 2>&1 | tee -a govulncheck-binaries.txt
+          done
           gh attestation verify "$ARCHIVE" --repo "$GITHUB_REPOSITORY" \
             --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/release.yml" \
             --source-ref "refs/tags/$RELEASE_TAG" --source-digest "$GITHUB_SHA" 2>&1 | tee provenance.txt

@@ -1,5 +1,13 @@
 # Release validation
 
+## 1.1.2 security release — October 30, 2026
+
+Grafana review ticket 240360 requests removal of the two binary dependency warnings in 1.1.1. This release updates `golang.org/x/net` to 0.62.0, which fixes GO-2026-6860 and GO-2026-6866, and resolves its required `golang.org/x/sys` 0.49.0 and `golang.org/x/text` 0.43.0 dependencies. Go 1.26.10, Grafana Go SDK 0.296.5, application source, and npm dependencies are unchanged. The panel remains at its signed 1.1.1 release.
+
+CI and the tagged release now run `govulncheck@v1.8.0 -mode=binary -scan=module` in text mode against all six backend targets. The release check scans executables extracted from the exact signed ZIP; `set -euo pipefail` makes module findings fail the workflow even if a later validator would classify them as warnings. Source reachability analysis remains an additional check, not a substitute for binary dependency remediation. JSON scanner output is not used as an exit-code gate.
+
+Confirm the new source scan, backend regression tests, six binary scans, and full signed-archive validator results before publication. Preserve 1.1.1 evidence as historical; its absence of reachable HTML calls did not satisfy the reviewer's request to update the embedded module. Use the newly generated ZIP and SHA1 for the existing datasource submission; do not resubmit the old 1.1.1 ZIP or change the panel submission solely for this fix.
+
 ## 1.1.1 signing release — October 30, 2026
 
 Grafana has requested signed builds of both companion plugins. Version 1.1.1 changes release metadata and signing safeguards only; the reviewed 1.1.0 plugin behavior and dependency graph are unchanged. The release workflow requires the public-signing gate and token, checks for a signed manifest in the downloaded archive, and retains exact-archive provenance and full validator checks. Verify the actual signature classification and archive hashes before publication and submission; signing is not itself catalog publication.
